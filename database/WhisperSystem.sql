@@ -31,14 +31,15 @@ create table user(--ユーザ情報表
     PRIMARY KEY (userId) 
 );
 CREATE TABLE follow (
-    userId VARCHAR(30) NOT NULL,
-    followUserId VARCHAR(30) NOT NULL,
+    userId VARCHAR(30) NOT NULL,  -- ユーザID
+    followUserId VARCHAR(30) NOT NULL,  -- フォロー先のユーザID
     PRIMARY KEY (userId, followUserId),
-    FOREIGN KEY (userId) REFERENCES users(userId), --ユーザ情報表にユーザIDを参照する
-    FOREIGN KEY (followUserId) REFERENCES users(userId) --ユーザ情報表にユーザIDを参照する
+    FOREIGN KEY (userId) REFERENCES user(userId),  -- ユーザ情報表にユーザIDを参照する
+    FOREIGN KEY (followUserId) REFERENCES user(userId)  -- フォロー先のユーザIDを参照する
 );
+
 create table whisper(--  ささやき管理表
-    whisperNo bigint NOT NULL ,　--管理番号
+    whisperNo bigint NOT NULL AUTO_INCREMENT,--管理番号
     userId varchar(30) NOT NULL,　-- ユーザID
     postDate DATE NOT NULL DEFAULT (current_date), -- 投稿日付
     content varchar(256) NOT NULL,  -- 内容    
@@ -94,6 +95,10 @@ INSERT INTO whisper (userId, content, imagePath) VALUES
 INSERT INTO goodInfo (userId, whisperNo) VALUES
     ('1', 2),
     ('2', 3);
+--フォロー情報を導入
+INSERT INTO follow (userId, followUserId) VALUES
+    ('1', 3),
+    ('2', 3);    
  
 COMMIT; 
 
