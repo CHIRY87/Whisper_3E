@@ -4,12 +4,14 @@ import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.whisperclient.OverflowMenuActivity
+import jp.ac.ecc.whisper_3e.R
 import org.json.JSONObject
 import java.util.*
 import okhttp3.*
 import java.io.IOException
 
-class SearchActivity : OverFlowMenuActivity() {
+class SearchActivity : OverflowMenuActivity() {
 
     private lateinit var searchEdit: EditText
     private lateinit var searchButton: Button
