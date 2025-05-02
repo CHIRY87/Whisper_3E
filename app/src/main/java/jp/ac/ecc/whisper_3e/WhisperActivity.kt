@@ -1,78 +1,109 @@
 package jp.ac.ecc.whisper_3e
 
-class WhisperActivity {
-}
-package com.example.whisperapp
-
 import android.content.Intent
 import android.os.Bundle
-import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
-import com.example.whisperapp.api.WhisperApi
-import com.example.whisperapp.model.GlobalData
-import com.example.whisperapp.model.WhisperResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import okhttp3.*
+import org.json.JSONObject
+import java.io.IOException
 
-class WhisperActivity : OverFlowMenuActivity() {
+class WhisperActivity : OverflowMenuActivity() {
 
+    private lateinit var whisperText: TextView
     private lateinit var whisperEdit: EditText
     private lateinit var whisperButton: Button
     private lateinit var cancelButton: Button
-    private var loginUserId: String? = null
+
+    private val client = OkHttpClient() // OkHttpクライアント
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_whisper)
 
-        // 2-1. Khai báo view
+        // 画面上のUI要素を取得
+        whisperText = findViewById(R.id.whisperText)
         whisperEdit = findViewById(R.id.whisperEdit)
         whisperButton = findViewById(R.id.whisperButton)
         cancelButton = findViewById(R.id.cancelButton)
 
-        // 2-2. Lấy ID người dùng đăng nhập
-        loginUserId = GlobalData.loginUserId
+        // ログインユーザーID（OverflowMenuActivityから継承されたグローバル変数を使用）
+        val loggedInUserId = loginUserId
 
-        // 2-3. Xử lý nút whisper
+        // Whisperボタンのクリックイベント
         whisperButton.setOnClickListener {
-            val content = whisperEdit.text.toString().trim()
-            if (content.isEmpty()) {
+            val whisperContent = whisperEdit.text.toString()
+
+            // 入力チェック
+            if (whisperContent.isBlank()) {
                 Toast.makeText(this, "ささやく内容を入力してください", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // 2-3-2. Gửi API đăng ký whisper
-            WhisperApi.service.postWhisper(loginUserId ?: "", content)
-                .enqueue(object : Callback<WhisperResponse> {
-                    override fun onResponse(
-                        call: Call<WhisperResponse>,
-                        response: Response<WhisperResponse>
-                    ) {
-                        if (response.isSuccessful && response.body() != null) {
-                            val body = response.body()!!
-                            if (body.error != null) {
-                                Toast.makeText(this@WhisperActivity, body.error, Toast.LENGTH_SHORT).show()
-                            } else {
-                                // 2-3-2-1-2. Chuyển sang màn hình timeline
+            // ささやき登録処理
+            sendWhisperRequest(loggedInUserId, whisperContent)
+        }
+
+        // キャンセルボタンのクリックイベント
+        cancelButton.setOnClickListener {
+            finish()  // 自分の画面を閉じる
+        }
+    }
+
+    // ささやき登録処理を行う関数
+    private fun sendWhisperRequest(userId: String, whisperContent: String) {
+        val url = "https://your.api.endpoint/whisper"  // 実際のAPIエンドポイントに置き換えてください
+
+        // POSTリクエストの作成
+        val formBody = FormBody.Builder()
+            .add("userId", userId)
+            .add("whisper", whisperContent)
+            .build()
+
+        val request = Request.Builder()
+            .url(url)
+            .post(formBody)
+            .build()
+
+        // APIリクエストを実行
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        // レスポンスをJSON形式で解析
+                        val jsonResponse = JSONObject(responseBody)
+                        val success = jsonResponse.getBoolean("success")
+
+                        runOnUiThread {
+                            if (success) {
+                                Toast.makeText(this@WhisperActivity, "ささやきが登録されました", Toast.LENGTH_SHORT).show()
+                                // タイムライン画面に遷移
                                 startActivity(Intent(this@WhisperActivity, TimelineActivity::class.java))
-                                // 2-3-2-1-3. Đóng màn hình hiện tại
                                 finish()
+                            } else {
+                                val errorMessage = jsonResponse.getString("message")
+                                Toast.makeText(this@WhisperActivity, errorMessage, Toast.LENGTH_SHORT).show()
                             }
-                        } else {
-                            Toast.makeText(this@WhisperActivity, "エラーが発生しました", Toast.LENGTH_SHORT).show()
                         }
                     }
-
-                    override fun onFailure(call: Call<WhisperResponse>, t: Throwable) {
-                        Toast.makeText(this@WhisperActivity, "通信に失敗しました", Toast.LENGTH_SHORT).show()
+                } else {
+                    // APIリクエストが失敗した場合
+                    runOnUiThread {
+                        Toast.makeText(this@WhisperActivity, "通信エラーが発生しました", Toast.LENGTH_SHORT).show()
                     }
-                })
-        }
+                }
+            }
 
-        // 2-4. Xử lý nút cancel
-        cancelButton.setOnClickListener {
-            finish()
-        }
+            override fun onFailure(call: Call, e: IOException) {
+                // リクエストが失敗した場合
+                runOnUiThread {
+                    Toast.makeText(this@WhisperActivity, "通信エラーが発生しました", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
     }
 }

@@ -1,4 +1,5 @@
-package com.example.whisperclient
+package jp.ac.ecc.whisper_3e
+
 
 import SearchActivity
 import android.content.Intent
