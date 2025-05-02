@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Whisper Text -->
+        <TextView
+            android:id="@+id/whisperText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Whisper"
+            android:textSize="34sp"
+            app:layout_constraintBottom_toTopOf="@id/whisperEdit"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Whisper Input -->
+        <EditText
+            android:id="@+id/whisperEdit"
+            android:layout_width="275dp"
+            android:layout_height="64dp"
+            android:layout_marginBottom="16dp"
+            android:gravity="top"
+            android:hint="Whisper Text"
+            android:inputType="textMultiLine"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@id/whisperButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/whisperText" />
+
+        <!-- Whisper Submit Button -->
+        <Button
+            android:id="@+id/whisperButton"
+            android:layout_width="275dp"
+            android:layout_height="85dp"
+            android:layout_marginBottom="8dp"
+            android:backgroundTint="#2196F3"
+            android:text="Whisper"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@id/cancelButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/whisperEdit" />
+
+        <!-- Cancel Button -->
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="146dp"
+            android:layout_height="75dp"
+            android:backgroundTint="#2196F3"
+            android:text="Cancel"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.7"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/whisperButton" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
