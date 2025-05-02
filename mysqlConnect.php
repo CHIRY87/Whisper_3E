@@ -3,7 +3,7 @@
   define("DB_HOST","localhost");   // 接続するホスト名を指定します。 例：localhost、DBサーバーアドレス(xxxxxx.db.xxxxx.ne.jp みたいな感じ) etc..
   define("DB_USER","root");        // 接続するユーザー名を指定します。 例：root、dbuser(自作したユーザー) etc..
   define("DB_PASSWORD","root");    // 接続するユーザーのパスワードを指定します。
-  define("DB_DATABASE","studb"); // 接続するデーターベース名を指定します。 例：studb、whisper etc..
+  define("DB_DATABASE","WhisperSystem"); // 接続するデーターベース名を指定します。 例：studb、whisper etc..
 
   // PDOオブジェクトの作成
   $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_DATABASE . ";charset=utf8mb4"; // 接続情報作成 ※dsn = データソース名(Data Source Name)

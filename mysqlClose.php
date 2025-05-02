@@ -1,5 +1,5 @@
 <?php
-if(isset($pdo)) {
+function closeConnection($pdo){
   $pdo = null;
 }
 ?>
