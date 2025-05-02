@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "jp.ac.ecc.whisper_3e"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "jp.ac.ecc.whisper_3e"
