@@ -1,5 +1,6 @@
 package jp.ac.ecc.whisper_3e
 
+import FollowListActivity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button

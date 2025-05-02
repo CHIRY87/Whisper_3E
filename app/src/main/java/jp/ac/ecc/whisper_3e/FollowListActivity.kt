@@ -3,12 +3,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.appcompat.app.AppCompatActivity
+import com.example.whisperclient.OverflowMenuActivity
 import jp.ac.ecc.whisper_3e.R
 import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.IOException
 
-class FollowListActivity : AppCompatActivity() {
+class FollowListActivity : OverflowMenuActivity() {  // Inherit from OverflowMenuActivity
 
     private lateinit var followListText: TextView
     private lateinit var followRecycle: RecyclerView
@@ -18,71 +20,88 @@ class FollowListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_follow_list)
 
-        // Initialize views
+        // Step 2-1: Declare the views
         followListText = findViewById(R.id.followListText)
         followRecycle = findViewById(R.id.followRecycle)
 
         // Set up RecyclerView
         followRecycle.layoutManager = LinearLayoutManager(this)
-        followListAdapter = FollowListAdapter()
+
+        // Initialize the adapter with an empty list
+        followListAdapter = FollowListAdapter(emptyList())
         followRecycle.adapter = followListAdapter
 
-        // Get the user ID and category (follow/follower) from intent
-        val userId = intent.getStringExtra("USER_ID")
-        val category = intent.getStringExtra("CATEGORY") // "follow" or "follower"
+        // Step 2-2: Get the user ID and category (follow/follower) from intent
+        val userId = intent.getStringExtra("USER_ID") ?: ""
+        val category = intent.getStringExtra("CATEGORY") ?: ""
 
-        // Change text based on the category
+        // Step 2-3: Change the text of followListText based on the category
         followListText.text = if (category == "follow") {
             "Following List"
         } else {
             "Followers List"
         }
 
-        // Fetch follow/follower data from API
+        // Step 2-4: Request follow/follower data from the API
         fetchFollowList(userId, category)
     }
 
     private fun fetchFollowList(userId: String?, category: String?) {
         val client = OkHttpClient()
 
-        // Prepare the API URL (replace with your actual endpoint)
+        // Step 2-4: Prepare the API URL (adjust with the actual endpoint)
         val url = "https://10.108.1.194/getFollowersAndFollowing?userId=$userId&category=$category"
 
-        // Request setup
+        // Step 2-4: Request setup
         val request = Request.Builder()
             .url(url)
             .build()
 
-        // Send request
+        // Send the request
         client.newCall(request).enqueue(object : Callback {
+            // Step 2-4-1: If the response is successful
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
-                    // Parse JSON and update UI (Assuming you have a function to parse JSON)
+                    // Step 2-4-2: Parse the response JSON and update the UI
                     val followList = parseFollowList(responseBody)
 
-                    // Update UI with the fetched data on the main thread
+                    // Update the UI with the fetched data on the main thread
                     runOnUiThread {
-                        followListAdapter.submitList(followList)
+                        // Step 2-4-2-4: Set the follow/follower data to the RecyclerView
+                        followListAdapter.updateData(followList)
                     }
                 } else {
                     runOnUiThread {
+                        // Step 2-4-2-1: Show error message if the response is not successful
                         Toast.makeText(applicationContext, "Failed to fetch data", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
 
+            // Step 2-4-2: If the request fails
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
+                    // Step 2-4-2-1: Show error message when request fails
                     Toast.makeText(applicationContext, "Request failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         })
     }
 
+    // Step 2-4-2: Parse the response JSON and return the list of users
     private fun parseFollowList(responseBody: String?): List<String> {
-        // Parse the response and return the list of follows/followers
-        // This is just an example; adjust as per your API response structure
-        return listOf("User1", "User2", "User3") // Replace with actual data parsing logic
+        val followList = mutableListOf<String>()
+        try {
+            val jsonArray = JSONArray(responseBody)
+            for (i in 0 until jsonArray.length()) {
+                val jsonObject = jsonArray.getJSONObject(i)
+                val userName = jsonObject.getString("username")  // Assuming the key for the username is "username"
+                followList.add(userName)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return followList
     }
 }

@@ -6,10 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import jp.ac.ecc.whisper_3e.R
-import jp.ac.ecc.whisper_3e.TimelineActivity
 
 open class OverflowMenuActivity : AppCompatActivity() {
 
@@ -39,19 +36,19 @@ open class OverflowMenuActivity : AppCompatActivity() {
             }
 
             R.id.whisper -> {
-                startActivity(Intent(this, WhisperPostActivity::class.java))
+                startActivity(Intent(this, WhisperActivity::class.java))
                 return true
             }
 
             R.id.myprofile -> {
-                val intent = Intent(this, ProfileActivity::class.java)
+                val intent = Intent(this, UserInfoActivity::class.java)
                 intent.putExtra("USER_ID", loginUserId)
                 startActivity(intent)
                 return true
             }
 
             R.id.profileedit -> {
-                val intent = Intent(this, ProfileEditActivity::class.java)
+                val intent = Intent(this, UserEditActivity::class.java)
                 intent.putExtra("USER_ID", loginUserId)
                 startActivity(intent)
                 return true
