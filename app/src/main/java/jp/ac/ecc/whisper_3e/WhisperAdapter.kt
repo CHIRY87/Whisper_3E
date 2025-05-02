@@ -1,6 +1,5 @@
 package jp.ac.ecc.whisper_3e
 
-import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
@@ -10,8 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class WhisperAdapter(
-    private val whisperList: MutableList<WhisperRowData>,
-    private val context: Context
+    private val whisperList: MutableList<String>
 ) : RecyclerView.Adapter<WhisperAdapter.WhisperViewHolder>() {
 
     inner class WhisperViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

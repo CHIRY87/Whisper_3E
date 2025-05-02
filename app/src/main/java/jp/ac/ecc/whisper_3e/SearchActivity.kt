@@ -3,7 +3,7 @@ import android.view.View
 import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.whisperclient.OverflowMenuActivity
+import jp.ac.ecc.whisper_3e.OverflowMenuActivity
 import jp.ac.ecc.whisper_3e.R
 import jp.ac.ecc.whisper_3e.WhisperAdapter
 import okhttp3.*
