@@ -1,5 +1,6 @@
 package jp.ac.ecc.whisper_3e
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
@@ -24,7 +25,7 @@ class FollowListAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FollowViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.follow_recycle_row, parent, false)
+        val view = LayoutInflater.from(context).inflate(R.layout.activity_follow_list, parent, false)
         return FollowViewHolder(view)
     }
 
@@ -56,6 +57,7 @@ class FollowListAdapter(
     }
 
     // Method to update the data in the adapter
+    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newItems: List<JSONObject>) {
         items = newItems
         notifyDataSetChanged()  // Notify adapter that data has been updated

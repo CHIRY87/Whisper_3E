@@ -1,15 +1,15 @@
+package jp.ac.ecc.whisper_3e
+
 import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import jp.ac.ecc.whisper_3e.FollowListAdapter
-import jp.ac.ecc.whisper_3e.OverflowMenuActivity
-import jp.ac.ecc.whisper_3e.R
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+
 class FollowListActivity : OverflowMenuActivity() {
 
     private lateinit var followListText: TextView
@@ -57,7 +57,7 @@ class FollowListActivity : OverflowMenuActivity() {
         client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
-                    val responseBody = response.body?.string()
+                    val responseBody = response.body.string()
                     val followList = parseFollowList(responseBody)
 
                     // Step 2-4-2: Handle JSON data and update RecyclerView

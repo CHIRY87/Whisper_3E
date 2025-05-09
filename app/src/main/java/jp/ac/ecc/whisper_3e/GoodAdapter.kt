@@ -1,6 +1,5 @@
 package jp.ac.ecc.whisper_3e
 
-import UserInfoActivity
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
@@ -22,7 +21,6 @@ class GoodAdapter(
         val userNameText: TextView = itemView.findViewById(R.id.userNameText)
         val whisperText: TextView = itemView.findViewById(R.id.whisperText)
         val goodCntText: TextView = itemView.findViewById(R.id.goodCntText)
-        val goodText: TextView = itemView.findViewById(R.id.goodText)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoodViewHolder {
@@ -36,7 +34,8 @@ class GoodAdapter(
         // Bind the data to the views
         holder.userNameText.text = currentItem.userName
         holder.whisperText.text = currentItem.whisper
-        holder.goodCntText.text = "Likes: ${currentItem.goodCount}"
+        holder.goodCntText.text = context.getString(R.string.likes_text, currentItem.goodCount)
+
 
         // Set up user image using Glide
         Glide.with(context)
