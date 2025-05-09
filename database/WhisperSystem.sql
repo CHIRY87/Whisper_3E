@@ -41,7 +41,7 @@ CREATE TABLE follow (
 create table whisper(--  ささやき管理表
     whisperNo bigint NOT NULL AUTO_INCREMENT,--管理番号
     userId varchar(30) NOT NULL,　-- ユーザID
-    postDate DATE NOT NULL DEFAULT (current_date), -- 投稿日付
+    postDate DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),-- 投稿日付 ＊*DATEデータ形からDATETIMEに変更*＊
     content varchar(256) NOT NULL,  -- 内容    
     imagePath varchar(100),　-- 画像
     PRIMARY KEY (whisperNo),

@@ -40,7 +40,7 @@ CREATE TABLE follow (
 create table whisper(
     whisperNo BIGINT NOT NULL AUTO_INCREMENT,
     userId VARCHAR(30) NOT NULL,
-    postDate DATE NOT NULL DEFAULT (current_date),
+    postDate DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
     content VARCHAR(256) NOT NULL, 
     imagePath VARCHAR(100),
     PRIMARY KEY (whisperNo),
