@@ -2,50 +2,100 @@ package jp.ac.ecc.whisper_3e
 
 import android.os.Bundle
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
 
-class TimelineActivity : OverflowMenu() {
+class TimelineActivity : OverflowMenuActivity() {
 
-    // ２－１．画面デザインで定義したオブジェクトを変数として宣言する。
     private lateinit var timelineRecycle: RecyclerView
-
-    // ２－２．グローバル変数のログインユーザーIDを取得。
     private var loginUserId: String? = null
+    private val whisperList = mutableListOf<WhisperRowData>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_timeline) // あなたのXMLファイル名に合わせてください
+        setContentView(R.layout.activity_timeline)
 
-        // ２－１．画面デザインで定義したオブジェクトを変数として宣言する。
         timelineRecycle = findViewById(R.id.timelineRecycle)
+        timelineRecycle.layoutManager = LinearLayoutManager(this)
 
-        // ２－２．グローバル変数のログインユーザーIDを取得。
         loginUserId = GlobalData.loginUserId
 
-        // ２－３．タイムライン情報取得APIをリクエストしてログインユーザが確認できるささやき情報取得を行う
+        if (loginUserId.isNullOrEmpty()) {
+            Toast.makeText(this, "ユーザーIDが無効です。再度ログインしてください。", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         fetchTimeline()
     }
 
     private fun fetchTimeline() {
-        // API通信はここで行います。ここでは仮の例としてFakeApiを使用します。
-        FakeApi.getTimeline(loginUserId ?: "") { result, error ->
+        val url = "https://10.108.1.194/timeline" // Replace with your actual API
+        val client = OkHttpClient()
 
-            if (error != null) {
-                // ２－３－２－１．エラーメッセージをトースト表示する
-                Toast.makeText(this, "リクエスト失敗: $error", Toast.LENGTH_SHORT).show()
-            } else if (result != null) {
-                if (result.hasError) {
-                    // ２－３－１－１．JSONデータがエラーの場合、受け取ったエラーメッセージをトースト表示して処理を終了させる
-                    Toast.makeText(this, "エラー: ${result.errorMessage}", Toast.LENGTH_SHORT).show()
-                } else {
-                    // ２－３－１－２．ささやき情報一覧が存在する間、以下の処理を繰り返す
-                    val whispersList = result.whispers // ささやき情報をリストに格納
+        val requestBody = FormBody.Builder()
+            .add("userId", loginUserId!!)
+            .build()
 
-                    // ２－３－１－３．timelineRecycleにささやき情報リストをセットする
-                    val adapter = TimelineAdapter(whispersList)
-                    timelineRecycle.adapter = adapter
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@TimelineActivity, "通信に失敗しました", Toast.LENGTH_SHORT).show()
                 }
             }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) {
+                        showError("サーバーエラー: ${response.code}")
+                        return
+                    }
+
+                    val json = JSONObject(response.body.string())
+                    if (json.getBoolean("error")) {
+                        showError(json.getString("message"))
+                        return
+                    }
+
+                    val whispers = json.getJSONArray("whispers")
+                    parseWhispers(whispers)
+                }
+            }
+        })
+    }
+
+    private fun parseWhispers(jsonArray: JSONArray) {
+        whisperList.clear()
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.getJSONObject(i)
+            val whisper = WhisperRowData(
+                whisperId = obj.getString("whisperId"),
+                userId = obj.getString("userId"),
+                userName = obj.getString("userName"),
+                whisperText = obj.getString("whisperText"),
+                userIconPath = obj.getString("userIconPath"),
+                isLiked = obj.getBoolean("isLiked")
+            )
+            whisperList.add(whisper)
+        }
+
+        runOnUiThread {
+            val adapter = WhisperAdapter(whisperList, this)
+            timelineRecycle.adapter = adapter
+        }
+    }
+
+    private fun showError(message: String) {
+        runOnUiThread {
+            Toast.makeText(this@TimelineActivity, message, Toast.LENGTH_SHORT).show()
         }
     }
 }

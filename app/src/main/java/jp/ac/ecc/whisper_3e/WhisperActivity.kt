@@ -54,7 +54,7 @@ class WhisperActivity : OverflowMenuActivity() {
 
     // ささやき登録処理を行う関数
     private fun sendWhisperRequest(userId: String, whisperContent: String) {
-        val url = "https://your.api.endpoint/whisper"  // 実際のAPIエンドポイントに置き換えてください
+        val url = "https://10.108.1.194/whisper"  // 実際のAPIエンドポイントに置き換えてください
 
         // POSTリクエストの作成
         val formBody = FormBody.Builder()

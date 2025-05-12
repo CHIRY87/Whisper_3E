@@ -61,7 +61,7 @@ class WhisperAdapter(
     override fun getItemCount(): Int = whisperList.size
 
     private fun toggleLike(item: WhisperRowData, position: Int) {
-        val url = "https://your.api.url/like_toggle" // ← 適切なAPIに変更する
+        val url = "https://10.108.1.194/like_toggle" // ← 適切なAPIに変更する
         val client = OkHttpClient()
 
         val requestBody = FormBody.Builder()
