@@ -1,5 +1,7 @@
 package jp.ac.ecc.whisper_3e
 
+import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,8 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
 class UserAdapter(
-    private val userList: MutableList<UserRowData>,
-    private val onItemClicked: (UserRowData) -> Unit  // Change name to `onItemClicked`
+    private val context: Context,
+    private val userList: MutableList<UserRowData>
 ) : RecyclerView.Adapter<UserAdapter.UserViewHolder>() {
 
     class UserViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -39,10 +41,13 @@ class UserAdapter(
             .placeholder(R.drawable.ic_launcher_foreground)
             .into(holder.userImage)
 
-        // Set up the click listener for each user item
-        holder.itemView.setOnClickListener {
-            // Pass the clicked user data to the callback to update the UI
-            onItemClicked(user)
+        // Set click listener on the userImage to navigate to user info screen
+        holder.userImage.setOnClickListener {
+            val intent = Intent(context, UserInfoActivity::class.java).apply {
+                putExtra("userId", user.userId)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)  // New task flag as required
+            }
+            context.startActivity(intent)
         }
     }
 

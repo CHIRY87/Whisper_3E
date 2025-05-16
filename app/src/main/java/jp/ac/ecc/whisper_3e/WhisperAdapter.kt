@@ -75,7 +75,6 @@ class WhisperAdapter(
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                // リクエスト失敗
                 android.os.Handler(context.mainLooper).post {
                     Toast.makeText(context, "通信に失敗しました", Toast.LENGTH_SHORT).show()
                 }
@@ -108,5 +107,11 @@ class WhisperAdapter(
                 }
             }
         })
+    }
+
+    fun updateWhispers(newList: List<WhisperRowData>) {
+        whisperList.clear()
+        whisperList.addAll(newList)
+        notifyDataSetChanged()
     }
 }

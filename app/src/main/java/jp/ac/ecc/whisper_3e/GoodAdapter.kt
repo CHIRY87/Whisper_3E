@@ -36,21 +36,29 @@ class GoodAdapter(
         holder.whisperText.text = currentItem.whisper
         holder.goodCntText.text = context.getString(R.string.likes_text, currentItem.goodCount)
 
-
-        // Set up user image using Glide
+        // Load user image with Glide
         Glide.with(context)
             .load(currentItem.userImagePath)
             .into(holder.userImage)
 
-        // Set click listener on the user image to open the user's profile
+        // Set click listener on user image to open UserInfoActivity
         holder.userImage.setOnClickListener {
-            val intent = Intent(context, UserInfoActivity::class.java)
-            intent.putExtra("USER_ID", currentItem.userId)
+            val intent = Intent(context, UserInfoActivity::class.java).apply {
+                putExtra("userId", currentItem.userId)  // Key should be "userId"
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
             context.startActivity(intent)
         }
     }
 
     override fun getItemCount(): Int {
         return items.size
+    }
+
+    // Add this method to update the adapter's data and refresh the RecyclerView
+    fun updateWhispers(newList: List<GoodRowData>) {
+        items.clear()
+        items.addAll(newList)
+        notifyDataSetChanged()
     }
 }

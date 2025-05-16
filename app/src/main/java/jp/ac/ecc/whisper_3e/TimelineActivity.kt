@@ -14,6 +14,7 @@ class TimelineActivity : OverflowMenuActivity() {
     private lateinit var timelineRecycle: RecyclerView
     private var loginUserId: String? = null
     private val whisperList = mutableListOf<WhisperRowData>()
+    private lateinit var adapter: WhisperAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,8 +27,12 @@ class TimelineActivity : OverflowMenuActivity() {
 
         if (loginUserId.isNullOrEmpty()) {
             Toast.makeText(this, "ユーザーIDが無効です。再度ログインしてください。", Toast.LENGTH_SHORT).show()
+            finish()  // finish activity if no valid login user
             return
         }
+
+        adapter = WhisperAdapter(whisperList, this)
+        timelineRecycle.adapter = adapter
 
         fetchTimeline()
     }
@@ -81,15 +86,14 @@ class TimelineActivity : OverflowMenuActivity() {
                 userId = obj.getString("userId"),
                 userName = obj.getString("userName"),
                 whisperText = obj.getString("whisperText"),
-                userIconPath = obj.getString("userIconPath"),
+                userImage = obj.getString("userIconPath"),
                 isLiked = obj.getBoolean("isLiked")
             )
             whisperList.add(whisper)
         }
 
         runOnUiThread {
-            val adapter = WhisperAdapter(whisperList, this)
-            timelineRecycle.adapter = adapter
+            adapter.notifyDataSetChanged()
         }
     }
 

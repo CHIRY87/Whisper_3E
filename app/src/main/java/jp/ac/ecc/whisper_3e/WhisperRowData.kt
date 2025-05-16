@@ -5,7 +5,7 @@ data class WhisperRowData(
     val userName: String,
     val whisperId: String,
     val whisperText: String,
-    val userIconPath: String, // You can load this using Glide or Picasso
+    val userImage: String, // You can load this using Glide or Picasso
     var isLiked: Boolean
 )
 

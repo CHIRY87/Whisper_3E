@@ -1,7 +1,6 @@
 package jp.ac.ecc.whisper_3e
 
 
-import SearchActivity
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu

@@ -20,34 +20,33 @@ class FollowListActivity : OverflowMenuActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_follow_list)
 
-        // Step 2-1: Declare the views
+        // 2-1: Declare views
         followListText = findViewById(R.id.followListText)
         followRecycle = findViewById(R.id.followRecycle)
 
-        // Step 2-2: Get the user ID and category from the Intent
+        // 2-2: Get userId and category from Intent
         val userId = intent.getStringExtra("USER_ID") ?: ""
         val category = intent.getStringExtra("CATEGORY") ?: ""
 
-        // Step 2-3: Change the text of followListText based on the category
+        // 2-3: Change text based on category
         followListText.text = if (category == "follow") {
             "Following List"
         } else {
             "Followers List"
         }
 
-        // Step 2-4: Set up RecyclerView
+        // 2-4: Setup RecyclerView
         followRecycle.layoutManager = LinearLayoutManager(this)
         followListAdapter = FollowListAdapter(this, emptyList())
         followRecycle.adapter = followListAdapter
 
-        // Step 2-4: Fetch the follow/follower data
+        // 2-4: Fetch follow/follower data
         fetchFollowList(userId, category)
     }
 
     private fun fetchFollowList(userId: String, category: String) {
         val client = OkHttpClient()
 
-        // Step 2-4: Prepare the API URL (adjust with the actual endpoint)
         val url = "https://your-api-endpoint.com/getFollowersAndFollowing?userId=$userId&category=$category"
 
         val request = Request.Builder()
@@ -57,10 +56,26 @@ class FollowListActivity : OverflowMenuActivity() {
         client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
-                    val responseBody = response.body.string()
+                    val responseBody = response.body?.string()
+                    if (responseBody == null) {
+                        runOnUiThread {
+                            Toast.makeText(applicationContext, "Empty response from server", Toast.LENGTH_SHORT).show()
+                        }
+                        return
+                    }
+
+                    // Check for error message in JSON
+                    val errorMessage = parseErrorMessage(responseBody)
+                    if (errorMessage != null) {
+                        runOnUiThread {
+                            Toast.makeText(applicationContext, errorMessage, Toast.LENGTH_SHORT).show()
+                        }
+                        return
+                    }
+
+                    // Parse follow list
                     val followList = parseFollowList(responseBody)
 
-                    // Step 2-4-2: Handle JSON data and update RecyclerView
                     runOnUiThread {
                         if (followList.isNotEmpty()) {
                             followListAdapter.updateData(followList)
@@ -70,7 +85,6 @@ class FollowListActivity : OverflowMenuActivity() {
                     }
                 } else {
                     runOnUiThread {
-                        // Step 2-4-2-1: Show error if JSON data is invalid
                         Toast.makeText(applicationContext, "Failed to fetch data", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -78,14 +92,31 @@ class FollowListActivity : OverflowMenuActivity() {
 
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    // Step 2-4-2-1: Show error if the request fails
                     Toast.makeText(applicationContext, "Request failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         })
     }
 
-    private fun parseFollowList(responseBody: String?): List<JSONObject> {
+    /**
+     * Parses JSON response for an error message if present.
+     * Returns the error message string, or null if none found.
+     */
+    private fun parseErrorMessage(responseBody: String): String? {
+        return try {
+            val json = JSONObject(responseBody)
+            if (json.has("error")) {
+                json.getString("error")
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            // Not a JSONObject or no error key, assume no error message
+            null
+        }
+    }
+
+    private fun parseFollowList(responseBody: String): List<JSONObject> {
         val followList = mutableListOf<JSONObject>()
         try {
             val jsonArray = JSONArray(responseBody)
