@@ -6,21 +6,19 @@ require_once 'errorMsgs.php';
 // リクエストデータの取得
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postData = json_decode(file_get_contents('php://input'), true);
+    $userId = isset($postData['userId']) ? $postData['userId'] : null;
+    $loginUserId = isset($postData['loginUserId']) ? $postData['loginUserId'] : null;
 }
+
 
 // パラメータの確認
-if (empty($postData['userId'])) {
+if (empty($userId)) {
     returnError('006'); // ユーザーID未指定
-    exit;
 }
-if (empty($postData['loginUserId'])) {
+
+if (empty($loginUserId)) {
     returnError('015'); // ログインユーザーID未指定
-    exit;
 }
-
-$userId = $postData["userId"];
-$loginUserId = $postData["loginUserId"];
-
 
 
 //1.ユーザ情報取得
@@ -43,16 +41,17 @@ try {
     $stmt->execute();
 
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    if(!$user){
+        returnError('005');
+    }
 } catch (PDOException $e) {
-    echo "$e";
     returnError('004'); // SQLエラー
-    exit;
 }
+
 
 //2.フォロー中かどうか確認
 $sqlFollow = "
-SELECT 1
+SELECT COUNT(*)
 FROM follow
 WHERE userId = :loginUserId AND followUserId = :userId
 ";
@@ -64,10 +63,9 @@ try {
     $stmtFollow->execute();
 
     $userFollowFlg = $stmtFollow->fetch() ? true : false;
+
 } catch (PDOException $e) {
-    echo "$e";
     returnError('004'); // 対象データが見つからない
-    exit;
 }
 
 
@@ -87,12 +85,14 @@ WHERE w.userId = :userId
 ORDER BY w.postDate DESC
 ";
 
+
 $stmtWhisper = $pdo->prepare($sqlWhisper);
 $stmtWhisper->bindParam(':userId', $userId, PDO::PARAM_STR);
 $stmtWhisper->bindParam(':loginUserId', $loginUserId, PDO::PARAM_STR);
 $stmtWhisper->execute();
 
 $whisperList = $stmtWhisper->fetchAll(PDO::FETCH_ASSOC);
+
 
 //4.goodList取得
 $sqlGood = "
@@ -134,7 +134,6 @@ $response = [
 // レスポンス送信
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-
 // DB切断
 closeConnection($pdo);
 ?>
