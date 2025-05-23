@@ -1,8 +1,3 @@
--- クラス：SK3A
--- チーム：E
--- データベースの担当者：NGUYEN THI HOAN
--- 作成日：5月16日
-
 <?php
 // 1. エラー返却処理を読み込む
 require_once 'errorMsgs.php';
