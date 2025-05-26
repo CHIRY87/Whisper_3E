@@ -38,6 +38,10 @@ try {
     $sql .= "password = :password, ";
     $params[':password'] = password_hash($password, PASSWORD_DEFAULT);
   }
+  if(!empty($profile)) {
+    $sql .= "profile = :profile, ";
+    $params[':profile'] = $profile;
+  }
   
   //末尾のカンマを削除
   $sql = rtrim($sql, ", ");
@@ -56,11 +60,11 @@ try {
 
   //成功レスポンスをセット
   $response = [
-    "result" => "success",
-    "userId" => $userId,
-    "userName" => $userName,
-    "password" => $password,
-    "profile" => $profile,
+      "result" => "success",
+      "userId" => $userId,
+      "userName" => $userName,
+      "password" => $password,
+      "profile" => $profile,
   ];
     
 } catch (Exception $e) {
@@ -72,5 +76,5 @@ try {
   closeConnection($pdo);
 }
 
-echo json_encode($response);
+echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 ?>
