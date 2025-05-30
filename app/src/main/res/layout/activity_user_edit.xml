@@ -27,7 +27,7 @@
             android:id="@+id/userImage"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:src="@tools:sample/avatars[0]" />
+            android:src="@drawable/ic_launcher_background" />
 
         <TextView
             android:id="@+id/userIdText"

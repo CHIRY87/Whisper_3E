@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
+//import com.bumptech.glide.Glide
 
 class UserAdapter(
     private val context: Context,
@@ -36,10 +36,10 @@ class UserAdapter(
         holder.followerCntText.text = user.followerCount.toString()
 
         // Load the user image with Glide
-        Glide.with(holder.itemView.context)
-            .load(user.imagePath)
-            .placeholder(R.drawable.ic_launcher_foreground)
-            .into(holder.userImage)
+//        Glide.with(holder.itemView.context)
+//            .load(user.imagePath)
+//            .placeholder(R.drawable.ic_launcher_foreground)
+//            .into(holder.userImage)
 
         // Set click listener on the userImage to navigate to user info screen
         holder.userImage.setOnClickListener {

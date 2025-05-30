@@ -15,6 +15,7 @@ open class OverflowMenuActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -29,10 +30,10 @@ open class OverflowMenuActivity : AppCompatActivity() {
                 return true
             }
 
-            R.id.search -> {
-                startActivity(Intent(this, SearchActivity::class.java))
-                return true
-            }
+//            R.id.search -> {
+//                startActivity(Intent(this, SearchActivity::class.java))
+//                return true
+//            }
 
             R.id.whisper -> {
                 startActivity(Intent(this, WhisperActivity::class.java))
@@ -46,12 +47,12 @@ open class OverflowMenuActivity : AppCompatActivity() {
                 return true
             }
 
-            R.id.profileedit -> {
-                val intent = Intent(this, UserEditActivity::class.java)
-                intent.putExtra("USER_ID", loginUserId)
-                startActivity(intent)
-                return true
-            }
+//            R.id.profileedit -> {
+//                val intent = Intent(this, UserEditActivity::class.java)
+//                intent.putExtra("USER_ID", loginUserId)
+//                startActivity(intent)
+//                return true
+//            }
 
             R.id.logout -> {
                 loginUserId = ""
