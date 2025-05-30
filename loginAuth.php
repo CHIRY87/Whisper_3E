@@ -36,9 +36,7 @@ try {
 
     // 認証成功
     $response = [
-        "result" => "success",
-        "errCode" => null,
-        "errMsg" => null
+        "result" => "success"
     ];
 
     // JSON形式で返却
