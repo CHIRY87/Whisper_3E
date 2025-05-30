@@ -1,6 +1,6 @@
+-- 作成者：白石
+
 <?php
-require_once 'mysqlConnect.php';   // DB接続
-require_once 'mysqlClose.php';     // DB切断
 require_once 'errorMsgs.php';      // エラー返却処理
 
 header('Content-Type: application/json; charset=UTF-8');
@@ -20,6 +20,8 @@ if (empty($content)) {
     returnError('005'); // ささやき内容未指定
 }
 
+// DB接続
+require_once 'mysqlConnect.php';
 
 try {
     // トランザクション開始
@@ -58,6 +60,7 @@ try {
     returnError('001'); // SQL実行エラー
 } finally {
     // DB切断
+    require_once 'mysqlClose.php';     // DB切断
     closeConnection($pdo);
 }
 ?>

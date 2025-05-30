@@ -1,6 +1,6 @@
+-- 作成者：白石
+
 <?php
-require_once 'mysqlConnect.php';
-require_once 'mysqlClose.php';
 require_once 'errorMsgs.php';
 
 // リクエストデータの取得
@@ -20,6 +20,8 @@ if (empty($loginUserId)) {
     returnError('015'); // ログインユーザーID未指定
 }
 
+//DB接続
+require_once 'mysqlConnect.php';
 
 //1.ユーザ情報取得
 $sql = "
@@ -135,5 +137,6 @@ $response = [
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 // DB切断
+require_once 'mysqlClose.php';
 closeConnection($pdo);
 ?>

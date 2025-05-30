@@ -1,6 +1,6 @@
+-- 作成者：白石
+
 <?php
-require_once 'mysqlConnect.php';
-require_once 'mysqlClose.php';
 require_once 'errorMsgs.php';
 
 //グローバル変数化
@@ -22,6 +22,9 @@ if (empty($userId)) {
 if (empty($userName) && empty($password) && empty($profile)) {
   returnError('002');
 }
+
+//DB接続
+require_once 'mysqlConnect.php';
 
 try {
   //トランザクション処理
@@ -73,8 +76,10 @@ try {
   returnError('001');
 } finally {
   //DB切断
+  require_once 'mysqlClose.php';
   closeConnection($pdo);
 }
 
 echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
 ?>
