@@ -3,7 +3,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 // 1. エラーメッセージとデータベース接続のファイルを読み込む
 require_once('errorMsgs.php');
-require_once('mysqlConnect.php');
+
 
 // 2. 入力データの取得
 // JSON または POST フォームのデータを取得
@@ -21,7 +21,8 @@ if ($input && isset($input['userId'])) {
 if (empty($userId)) {
     returnError('006'); // ユーザIDが指定されていません
 }
-
+//データ接続
+require_once('mysqlConnect.php');
 try {
     // 4. SQL文の作成
     $sql = "SELECT userId, userName, profile, iconpath FROM user WHERE userId = :userId";
