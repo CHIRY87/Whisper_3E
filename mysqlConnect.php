@@ -1,5 +1,11 @@
 <?php
+
   // データベース接続の設定値(本来は「config.php」や「.env」といったような設定ファイルを作成して記載するべきですが、ここでは簡略化のために直接記載しています)
+      // 本番環境のDB接続情報に合わせて設定
+    // define("DB_HOST", "localhost"); 
+    // define("DB_USER", "whisper25_e");
+    // define("DB_PASSWORD", "Zn#x9TpG");
+    // define("DB_DATABASE", "whisper25_e");
   define("DB_HOST","localhost");   // 接続するホスト名を指定します。 例：localhost、DBサーバーアドレス(xxxxxx.db.xxxxx.ne.jp みたいな感じ) etc..
   define("DB_USER","root");        // 接続するユーザー名を指定します。 例：root、dbuser(自作したユーザー) etc..
   define("DB_PASSWORD","root");    // 接続するユーザーのパスワードを指定します。
