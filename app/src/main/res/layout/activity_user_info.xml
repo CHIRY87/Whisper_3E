@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Top: User Information Title -->
+    <TextView
+        android:id="@+id/userInfoText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="76dp"
+        android:layout_marginTop="32dp"
+        android:text="User Information"
+        android:textSize="34sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- User Image -->
+    <ImageView
+        android:id="@+id/userImage"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/userInfoText"
+        tools:srcCompat="@tools:sample/avatars" />
+
+    <!-- Username -->
+    <TextView
+        android:id="@+id/userNameText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="64dp"
+        android:text="UserName"
+        android:textSize="24sp"
+        app:layout_constraintStart_toEndOf="@id/userImage"
+        app:layout_constraintTop_toBottomOf="@id/userInfoText" />
+
+    <!-- Profile Text -->
+    <TextView
+        android:id="@+id/profileText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="12dp"
+        android:text="Profile"
+        android:textSize="24sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/userImage" />
+
+    <!-- Follow and Follower Labels -->
+    <TextView
+        android:id="@+id/followText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="48dp"
+        android:text="Follow"
+        android:textSize="18sp"
+        app:layout_constraintStart_toEndOf="@id/userNameText"
+        app:layout_constraintTop_toBottomOf="@id/userInfoText" />
+
+    <TextView
+        android:id="@+id/followerText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="24dp"
+        android:text="Follower"
+        android:textSize="18sp"
+        app:layout_constraintStart_toEndOf="@id/userNameText"
+        app:layout_constraintTop_toBottomOf="@id/followText" />
+
+    <!-- Follow and Follower Counts -->
+    <TextView
+        android:id="@+id/followCntText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="48dp"
+        android:text="fwcnt"
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@id/followText"
+        app:layout_constraintTop_toBottomOf="@id/userInfoText" />
+
+    <TextView
+        android:id="@+id/followerCntText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="28dp"
+        android:text="fwrcnt"
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@id/followerText"
+        app:layout_constraintTop_toBottomOf="@id/followCntText" />
+
+    <!-- Follow Button -->
+    <Button
+        android:id="@+id/followButton"
+        android:layout_width="90dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="188dp"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="#2196F3"
+        android:text="follow"
+        app:layout_constraintStart_toEndOf="@id/profileText"
+        app:layout_constraintTop_toBottomOf="@id/followerText"
+        tools:ignore="TouchTargetSizeCheck" />
+
+    <!-- RadioGroup for Options -->
+
+    <!-- RecyclerView for User Info -->
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="74dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/profileText">
+
+        <!-- Radio Buttons -->
+        <RadioButton
+            android:id="@+id/whisperRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="4dp"
+            android:backgroundTint="#8D8D8D"
+            android:button="@android:drawable/btn_radio"
+            android:buttonTint="#8D8D8D"
+            android:text="Whisper"
+            android:textColor="#8D8D8D"
+            android:textSize="24sp" />
+
+        <RadioButton
+            android:id="@+id/goodInfoRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="44dp"
+            android:layout_marginTop="4dp"
+            android:button="@android:drawable/btn_radio"
+            android:text="GoodInfo"
+            android:textColor="#8D8D8D"
+            android:textSize="24sp" />
+    </RadioGroup>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/userRecycle"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

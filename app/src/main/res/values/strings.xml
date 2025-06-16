@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Whisper_3E</string>
+    <string name="likes_text">Likes: %1$d</string>
 </resources>
