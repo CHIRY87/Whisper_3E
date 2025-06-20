@@ -71,7 +71,6 @@ class UserInfoActivity : OverflowMenuActivity() {
         // ユーザー情報とリストを取得
         fetchUserInfo(displayUserId!!)
 
-
         // ラジオグループ切り替えリスナー
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
             showingWhispers = (checkedId == R.id.whisperRadio)
