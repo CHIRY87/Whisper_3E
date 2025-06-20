@@ -17,6 +17,7 @@ class UserInfoActivity : OverflowMenuActivity() {
 
     private lateinit var userImage: ImageView
     private lateinit var userNameText: TextView
+    private lateinit var profileText: TextView
     private lateinit var followCntText: TextView
     private lateinit var followerCntText: TextView
     private lateinit var followButton: Button
@@ -39,6 +40,7 @@ class UserInfoActivity : OverflowMenuActivity() {
         // Viewの初期化
         userImage = findViewById(R.id.userImage)
         userNameText = findViewById(R.id.userNameText)
+        profileText = findViewById(R.id.profileText)
         followCntText = findViewById(R.id.followCntText)
         followerCntText = findViewById(R.id.followerCntText)
         followButton = findViewById(R.id.followButton)
@@ -60,9 +62,7 @@ class UserInfoActivity : OverflowMenuActivity() {
         }
         displayUserId = userId
 
-        currentUserId = GlobalData.loginUserId
-
-
+        currentUserId = GlobalData.loginUserId ?: ""
 
         // ラジオボタン初期設定
         radioGroup.check(R.id.whisperRadio)
@@ -70,6 +70,7 @@ class UserInfoActivity : OverflowMenuActivity() {
 
         // ユーザー情報とリストを取得
         fetchUserInfo(displayUserId!!)
+
 
         // ラジオグループ切り替えリスナー
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
@@ -139,6 +140,7 @@ class UserInfoActivity : OverflowMenuActivity() {
                         }
 
                         val userName = json.optString("userName")
+                        val profile = json.optString("profile")
                         val followCnt = json.optInt("followCnt")
                         val followerCnt = json.optInt("followerCnt")
                         val followFlag = json.optBoolean("followFlag", false)
@@ -146,6 +148,7 @@ class UserInfoActivity : OverflowMenuActivity() {
 
                         runOnUiThread {
                             userNameText.text = userName
+                            profileText.text = profile
                             followCntText.text = ": $followCnt"
                             followerCntText.text = ": $followerCnt"
                             isFollowing = followFlag
@@ -177,7 +180,7 @@ class UserInfoActivity : OverflowMenuActivity() {
 
     private fun toggleFollow(followUserId: String, followFlg: Boolean) {
         val client = OkHttpClient()
-        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userUpd.php"
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/followCtl.php"
         val json = JSONObject().apply {
             put("loginUserId", currentUserId)
             put("followUserId", followUserId)

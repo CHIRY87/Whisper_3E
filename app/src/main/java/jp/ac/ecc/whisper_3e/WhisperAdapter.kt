@@ -210,7 +210,7 @@ class WhisperAdapter(
     override fun getItemCount(): Int = whisperList.size
 
     private fun toggleLike(item: WhisperRowData, position: Int) {
-        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/.php"
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userWhisperInfo.php"
         val client = OkHttpClient()
 
         val json = JSONObject().apply {

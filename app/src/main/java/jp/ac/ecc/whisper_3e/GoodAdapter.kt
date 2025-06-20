@@ -56,7 +56,7 @@ class  GoodAdapter(
     }
 
     // Add this method to update the adapter's data and refresh the RecyclerView
-    fun updateWhispers(newList: List<GoodRowData>) {
+    fun updateGood(newList: List<GoodRowData>) {
         items.clear()
         items.addAll(newList)
         notifyDataSetChanged()
