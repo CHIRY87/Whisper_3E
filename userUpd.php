@@ -1,4 +1,4 @@
--- 作成者：白石
+
 
 <?php
 require_once 'errorMsgs.php';
@@ -77,7 +77,6 @@ try {
 } finally {
   //DB切断
   require_once 'mysqlClose.php';
-  closeConnection($pdo);
 }
 
 echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

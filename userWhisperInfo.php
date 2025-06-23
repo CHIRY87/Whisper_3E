@@ -1,4 +1,4 @@
--- 作成者：白石
+
 
 <?php
 require_once 'errorMsgs.php';
