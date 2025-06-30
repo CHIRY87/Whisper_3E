@@ -98,12 +98,12 @@ class TimelineActivity : OverflowMenuActivity() {
         for (i in 0 until jsonArray.length()) {
             val obj = jsonArray.getJSONObject(i)
             val whisper = WhisperRowData(
-                whisperId = obj.optString("whisperId"),
+                whisperNo = obj.optInt("whisperNo"),
                 userId = obj.optString("userId"),
                 userName = obj.optString("userName"),
-                whisperText = obj.optString("whisperText"),
-                userImage = obj.optString("userIconPath"),
-                isLiked = obj.optBoolean("isLiked", false)
+                postDate = obj.optString("postDate"),
+                content = obj.optString("content"),
+                goodFlg = obj.optBoolean("goodFlg", false)
             )
             whisperList.add(whisper)
         }

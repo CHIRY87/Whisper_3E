@@ -8,19 +8,17 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 
-class  GoodAdapter(
+class GoodAdapter(
     private val context: Context,
     private val items: MutableList<GoodRowData>
 ) : RecyclerView.Adapter<GoodAdapter.GoodViewHolder>() {
 
-    // ViewHolder for each item
     inner class GoodViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val userImage: ImageView = itemView.findViewById(R.id.userImage)
         val userNameText: TextView = itemView.findViewById(R.id.userNameText)
         val whisperText: TextView = itemView.findViewById(R.id.whisperText)
-        val goodCntText: TextView = itemView.findViewById(R.id.goodCntText)
+        val goodFlgText: TextView = itemView.findViewById(R.id.goodText)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoodViewHolder {
@@ -31,31 +29,31 @@ class  GoodAdapter(
     override fun onBindViewHolder(holder: GoodViewHolder, position: Int) {
         val currentItem = items[position]
 
-        // Bind the data to the views
         holder.userNameText.text = currentItem.userName
-        holder.whisperText.text = currentItem.whisper
-        holder.goodCntText.text = context.getString(R.string.likes_text, currentItem.goodCount)
+        holder.whisperText.text = currentItem.content
+        holder.goodFlgText.text = if (currentItem.goodFlg) "Liked" else "Not Liked"
 
-        // Load user image with Glide
-        Glide.with(context)
-            .load(currentItem.userImagePath)
-            .into(holder.userImage)
-
-        // Set click listener on user image to open UserInfoActivity
+        // Navigate to UserInfoActivity
         holder.userImage.setOnClickListener {
             val intent = Intent(context, UserInfoActivity::class.java).apply {
-                putExtra("userId", currentItem.userId)  // Key should be "userId"
+                putExtra("userId", currentItem.userId)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+        }
+
+        // Optional: click whole row to go to profile too
+        holder.itemView.setOnClickListener {
+            val intent = Intent(context, UserInfoActivity::class.java).apply {
+                putExtra("userId", currentItem.userId)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
         }
     }
 
-    override fun getItemCount(): Int {
-        return items.size
-    }
+    override fun getItemCount(): Int = items.size
 
-    // Add this method to update the adapter's data and refresh the RecyclerView
     fun updateGood(newList: List<GoodRowData>) {
         items.clear()
         items.addAll(newList)
