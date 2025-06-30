@@ -50,7 +50,7 @@ class WhisperAdapter(
         // Navigate to user profile
         val goToUserInfo = {
             val intent = Intent(context, UserInfoActivity::class.java).apply {
-                putExtra("userId", item.userId)
+                putExtra("USER_ID", item.userId)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)

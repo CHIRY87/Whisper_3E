@@ -2,6 +2,7 @@ package jp.ac.ecc.whisper_3e
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -52,7 +53,9 @@ class UserInfoActivity : OverflowMenuActivity() {
         goodAdapter = GoodAdapter(this, mutableListOf())
         recyclerView.adapter = whisperAdapter
 
-        val userId = intent.getStringExtra("userId")
+        val userId = intent.getStringExtra("USER_ID") ?: ""
+        Log.d("DEBUG_USERINFO", "Received USER_ID=$userId")
+
         if (userId.isNullOrEmpty()) {
             Toast.makeText(this, "ユーザーIDが取得できませんでした", Toast.LENGTH_SHORT).show()
             finish()
@@ -91,13 +94,20 @@ class UserInfoActivity : OverflowMenuActivity() {
     private fun fetchUserData(userId: String) {
         val client = OkHttpClient()
         val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userWhisperInfo.php"
-        val json = JSONObject().put("userId", userId)
+        val json = JSONObject().apply {
+            put("userId", userId)
+            put("loginUserId", currentUserId)
+        }
+        Log.d("DEBUG_USERINFO", "Request JSON: ${json.toString()}")
+        Log.d("DEBUG_RESPONSE", "UserInfoAPI response: $json")
+
         val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = json.toString().toRequestBody(mediaType)
         val request = Request.Builder().url(url).post(requestBody).build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
+                Log.e("UserInfoActivity", "JSON parsing error", e)
                 runOnUiThread {
                     Toast.makeText(this@UserInfoActivity, "ユーザー情報の取得に失敗しました。", Toast.LENGTH_SHORT).show()
                 }
@@ -114,6 +124,7 @@ class UserInfoActivity : OverflowMenuActivity() {
                     }
                     try {
                         val json = JSONObject(bodyStr)
+                        Log.d("DEBUG_RESPONSE", "UserInfoAPI response: $json")
                         if (json.optString("result") != "success") {
                             runOnUiThread {
                                 Toast.makeText(this@UserInfoActivity, json.optString("errMsg"), Toast.LENGTH_SHORT).show()
@@ -123,28 +134,38 @@ class UserInfoActivity : OverflowMenuActivity() {
 
                         val userName = json.optString("userName")
                         val profile = json.optString("profile")
-                        val followCnt = json.optInt("followCnt")
-                        val followerCnt = json.optInt("followerCnt")
-                        val followFlag = json.optBoolean("followFlag", false)
+                        val followCnt = json.optInt("followCount")
+                        val followerCnt = json.optInt("followerCount")
+                        val followFlag = json.optBoolean("userFollowFlg", false)
                         val imageUrl = json.optString("image")
-
-                        val dataList = json.optJSONArray("data") ?: JSONArray()
 
                         val whispers = mutableListOf<WhisperRowData>()
                         val goods = mutableListOf<GoodRowData>()
 
-                        for (i in 0 until dataList.length()) {
-                            val obj = dataList.getJSONObject(i)
-                            val whisperNo = obj.optInt("whisperNo")
-                            val userId = obj.optString("userId")
-                            val userName = obj.optString("userName")
-                            val postDate = obj.optString("postDate")
-                            val content = obj.optString("content")
-                            val goodFlg = obj.optBoolean("goodFlg")
+                        if (showingWhispers) {
+                            val whisperList = json.optJSONArray("whisperList") ?: JSONArray()
+                            for (i in 0 until whisperList.length()) {
+                                val obj = whisperList.getJSONObject(i)
+                                val whisperNo = obj.optInt("whisperNo")
+                                val userId = obj.optString("userId")
+                                val userName = obj.optString("userName")
+                                val postDate = obj.optString("postDate")
+                                val content = obj.optString("content")
+                                val goodFlg = obj.optInt("goodFlg") == 1
 
-                            if (showingWhispers) {
                                 whispers.add(WhisperRowData(whisperNo, userId, userName, postDate, content, goodFlg))
-                            } else {
+                            }
+                        } else {
+                            val goodList = json.optJSONArray("goodList") ?: JSONArray()
+                            for (i in 0 until goodList.length()) {
+                                val obj = goodList.getJSONObject(i)
+                                val whisperNo = obj.optInt("whisperNo")
+                                val userId = obj.optString("userId")
+                                val userName = obj.optString("userName")
+                                val postDate = obj.optString("postDate")
+                                val content = obj.optString("content")
+                                val goodFlg = obj.optInt("goodFlg") == 1
+
                                 goods.add(GoodRowData(whisperNo, userId, userName, postDate, content, goodFlg))
                             }
                         }
@@ -162,13 +183,14 @@ class UserInfoActivity : OverflowMenuActivity() {
                                 userImage.setImageResource(R.drawable.kirito)
                             }
 
-                            followButton.visibility = if (currentUserId == userId) View.GONE else View.VISIBLE
+                            followButton.visibility = if (currentUserId == displayUserId) View.GONE else View.VISIBLE
                             followButton.text = if (isFollowing) "フォロー解除" else "フォローする"
 
                             if (showingWhispers) whisperAdapter.updateWhispers(whispers)
                             else goodAdapter.updateGood(goods)
                         }
                     } catch (e: Exception) {
+                        Log.e("UserInfoActivity", "JSON parsing error", e)
                         runOnUiThread {
                             Toast.makeText(this@UserInfoActivity, "データ処理エラーが発生しました。", Toast.LENGTH_SHORT).show()
                         }
@@ -177,6 +199,7 @@ class UserInfoActivity : OverflowMenuActivity() {
             }
         })
     }
+
 
     private fun toggleFollow(followUserId: String, followFlg: Boolean) {
         val client = OkHttpClient()

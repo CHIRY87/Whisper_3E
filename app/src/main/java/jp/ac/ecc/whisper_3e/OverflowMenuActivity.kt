@@ -3,6 +3,7 @@ package jp.ac.ecc.whisper_3e
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -44,6 +45,8 @@ open class OverflowMenuActivity : AppCompatActivity() {
                 }
                 val intent = Intent(this, UserInfoActivity::class.java)
                 intent.putExtra("USER_ID", currentUserId)
+                Log.d("DEBUG_OVERFLOW", "Starting UserInfoActivity with USER_ID=$currentUserId")
+
                 startActivity(intent)
                 return true
             }

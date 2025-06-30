@@ -36,7 +36,7 @@ class GoodAdapter(
         // Navigate to UserInfoActivity
         holder.userImage.setOnClickListener {
             val intent = Intent(context, UserInfoActivity::class.java).apply {
-                putExtra("userId", currentItem.userId)
+                putExtra("USER_ID", currentItem.userId)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
@@ -45,7 +45,7 @@ class GoodAdapter(
         // Optional: click whole row to go to profile too
         holder.itemView.setOnClickListener {
             val intent = Intent(context, UserInfoActivity::class.java).apply {
-                putExtra("userId", currentItem.userId)
+                putExtra("USER_ID", currentItem.userId)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
