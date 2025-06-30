@@ -1,9 +1,12 @@
 package jp.ac.ecc.whisper_3e
 
 data class GoodRowData(
+    val whisperNo: Int,
     val userId: String,
     val userName: String,
-    val whisper: String,
-    val goodCount: Int,
-    val userImagePath: String
+    val postDate: String,
+    val content: String,
+    var goodCount: Int,
+    val iconPath : String
 )
+

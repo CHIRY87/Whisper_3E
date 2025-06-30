@@ -1,5 +1,7 @@
 package jp.ac.ecc.whisper_3e
 
+import GoodAdapter
+import WhisperAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -47,8 +49,31 @@ class UserInfoActivity : OverflowMenuActivity() {
 
         // RecyclerViewのセットアップ
         recyclerView.layoutManager = LinearLayoutManager(this)
-        whisperAdapter = WhisperAdapter(mutableListOf(), this)
-        goodAdapter = GoodAdapter(this, mutableListOf())
+//        whisperAdapter = WhisperAdapter(mutableListOf(), this)tam thoi comment lai chuyen thanh cau lenh moi phia duoi 16/6
+//        whisperAdapter = WhisperAdapter(mutableListOf(), this) { whisper ->
+//            // Xử lý khi nhấn vào whisper item
+//            Toast.makeText(this, "Clicked whisper from: ${whisper.userName}", Toast.LENGTH_SHORT).show()
+//        }sửa ngày 27/06
+        whisperAdapter = WhisperAdapter(
+            mutableListOf(),
+            this,
+            onUserImageClick = { whisper ->
+                // Hành động khi nhấn vào ảnh người dùng
+                val intent = Intent(this, UserInfoActivity::class.java)
+                intent.putExtra("USER_ID", whisper.userId)
+                startActivity(intent)
+            },
+            onGoodClick = { whisper, position ->   // <-- thêm position nữa
+                // Hành động khi nhấn vào ngôi sao (goodImage)
+                Toast.makeText(this, "Clicked whisper from: ${whisper.userName} at position $position", Toast.LENGTH_SHORT).show()
+
+                // Bạn có thể cập nhật trạng thái like, gọi API, cập nhật adapter.notifyItemChanged(position) ở đây
+            }
+        )
+
+
+
+        goodAdapter = GoodAdapter(mutableListOf(), this)
         recyclerView.adapter = whisperAdapter
 
         // Intent から userIdを取得

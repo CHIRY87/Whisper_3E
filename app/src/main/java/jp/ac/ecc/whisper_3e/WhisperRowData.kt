@@ -1,11 +1,13 @@
 package jp.ac.ecc.whisper_3e
 
 data class WhisperRowData(
+    val whisperNo: Int,
     val userId: String,
     val userName: String,
-    val whisperId: String,
-    val whisperText: String,
-    val userImage: String, //
-    var isLiked: Boolean
+    val postDate: String,
+    val content: String,
+    var goodCount: Int,
+    var goodFlg: Boolean,
+    val iconPath : String,
+    val commentCount: Int
 )
-

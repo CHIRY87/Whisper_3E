@@ -1,270 +1,129 @@
-//package jp.ac.ecc.whisper_3e
-//
 //import android.content.Context
-//import android.content.Intent
-//import android.os.Handler
-//import android.os.Looper
 //import android.view.LayoutInflater
 //import android.view.View
 //import android.view.ViewGroup
 //import android.widget.ImageView
 //import android.widget.TextView
-//import android.widget.Toast
 //import androidx.recyclerview.widget.RecyclerView
-//import okhttp3.*
-//import org.json.JSONObject
-//import java.io.IOException
-//
+//import com.bumptech.glide.Glide
+//import jp.ac.ecc.whisper_3e.R
+//import jp.ac.ecc.whisper_3e.WhisperRowData
+
 //class WhisperAdapter(
 //    private val whisperList: MutableList<WhisperRowData>,
-//    private val context: Context
-//) : RecyclerView.Adapter<WhisperAdapter.WhisperViewHolder>() {
+//    private val context: Context,
+//    private val onUserImageClick: (WhisperRowData) -> Unit
+//) : RecyclerView.Adapter<WhisperAdapter.ViewHolder>() {
 //
-//    companion object {
-//        private const val LIKE_TOGGLE_URL = "https://10.108.1.194/like_toggle" // API URL
+//    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+//        val userImage: ImageView = view.findViewById(R.id.userImage)
+//        val userNameText: TextView = view.findViewById(R.id.userNameText)
+//        val whisperText: TextView = view.findViewById(R.id.whisperText)
+//        val goodImage: ImageView = view.findViewById(R.id.goodImage)
 //    }
 //
-//    private val mainHandler = Handler(Looper.getMainLooper())
-//
-//    inner class WhisperViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-//        val userImage: ImageView = itemView.findViewById(R.id.userImage)
-//        val userNameText: TextView = itemView.findViewById(R.id.userNameText)
-//        val whisperText: TextView = itemView.findViewById(R.id.whisperText)
-//        val goodImage: ImageView = itemView.findViewById(R.id.goodImage)
-//    }
-//
-//    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WhisperViewHolder {
+//    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 //        val view = LayoutInflater.from(parent.context)
 //            .inflate(R.layout.whisper_recycle_row, parent, false)
-//        return WhisperViewHolder(view)
+//        return ViewHolder(view)
 //    }
 //
-//    override fun onBindViewHolder(holder: WhisperViewHolder, position: Int) {
-//        val item = whisperList[position]
+//    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+//        val whisper = whisperList[position]
 //
-//        holder.userNameText.text = item.userName
-//        holder.whisperText.text = item.whisperText
+//        holder.userNameText.text = whisper.userName
+//        holder.whisperText.text = whisper.content
 //
-//        // Load user image
-//        // Glide.with(context).load(item.userImageUrl).into(holder.userImage)
-//
-//        // いいね画像切り替え
-//        holder.goodImage.setImageResource(
-//            if (item.isLiked) android.R.drawable.btn_star_big_on
-//            else android.R.drawable.btn_star_big_off
-//        )
-//
-//        // ユーザ画像タップ → ユーザ情報画面遷移
-//        holder.userImage.setOnClickListener {
-//            val intent = Intent(context, UserInfoActivity::class.java).apply {
-//                putExtra("userId", item.userId)
-//                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//            }
-//            context.startActivity(intent)
+//        if (whisper.iconPath.isNotEmpty()) {
+//            Glide.with(context).load(whisper.iconPath).into(holder.userImage)
+//        } else {
+//            holder.userImage.setImageResource(R.drawable.ic_launcher_background)
 //        }
 //
-//        // イイねクリック処理
+//        holder.goodImage.setImageResource(
+//            if (whisper.goodFlg) R.drawable.btn_star_big_on
+//            else R.drawable.btn_star_big_off
+//        )
+//
+//        holder.userImage.setOnClickListener {
+//            onUserImageClick(whisper)
+//        }
+//
 //        holder.goodImage.setOnClickListener {
-//            toggleLike(item, position)
+//            val currentPosition = holder.adapterPosition
+//            if (currentPosition == RecyclerView.NO_POSITION) return@setOnClickListener
+//
+//            val isLiked = (whisper.goodFlg)
+//            val newFlag = !isLiked
+//            whisper.goodFlg = newFlag
+//
+//            // Giả lập API (bạn thay bằng gọi thật nếu cần)
+//            whisper.goodFlg = newFlag
+//            notifyItemChanged(currentPosition)
 //        }
 //    }
 //
 //    override fun getItemCount(): Int = whisperList.size
-//
-//    private fun toggleLike(item: WhisperRowData, position: Int) {
-//        val client = OkHttpClient()
-//
-//        val requestBody = FormBody.Builder()
-//            .add("whisperId", item.whisperId)
-//            .build()
-//
-//        val request = Request.Builder()
-//            .url(LIKE_TOGGLE_URL)
-//            .post(requestBody)
-//            .build()
-//
-//        client.newCall(request).enqueue(object : Callback {
-//            override fun onFailure(call: Call, e: IOException) {
-//                mainHandler.post {
-//                    Toast.makeText(context, "通信に失敗しました", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onResponse(call: Call, response: Response) {
-//                response.use {
-//                    if (!response.isSuccessful) {
-//                        showError("サーバーエラー: ${response.code}")
-//                        return
-//                    }
-//
-//                    val body = response.body?.string()
-//                    if (body == null) {
-//                        showError("サーバーからの応答がありません")
-//                        return
-//                    }
-//
-//                    val json = JSONObject(body)
-//                    if (json.optBoolean("error", false)) {
-//                        val errorMsg = json.optString("message", "不明なエラー")
-//                        showError(errorMsg)
-//                    } else {
-//                        // 成功 → isLiked切り替え & 再描画
-//                        item.isLiked = !item.isLiked
-//                        mainHandler.post {
-//                            notifyItemChanged(position)
-//                        }
-//                    }
-//                }
-//            }
-//
-//            private fun showError(msg: String) {
-//                mainHandler.post {
-//                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        })
-//    }
-//
-//    fun updateWhispers(newList: List<WhisperRowData>) {
-//        whisperList.clear()
-//        whisperList.addAll(newList)
-//        notifyDataSetChanged()
-//    }
-//}
-// thay the api cap nhan them whisper
-package jp.ac.ecc.whisper_3e
+//}sửa ngày 27/06
 
 import android.content.Context
-import android.content.Intent
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import java.io.IOException
+import com.bumptech.glide.Glide
+import jp.ac.ecc.whisper_3e.R
+import jp.ac.ecc.whisper_3e.WhisperRowData
 
 class WhisperAdapter(
     private val whisperList: MutableList<WhisperRowData>,
-    private val context: Context
-) : RecyclerView.Adapter<WhisperAdapter.WhisperViewHolder>() {
+    private val context: Context,
+    private val onUserImageClick: (WhisperRowData) -> Unit,
+    private val onGoodClick: (WhisperRowData, Int) -> Unit  // truyền position
+) : RecyclerView.Adapter<WhisperAdapter.ViewHolder>() {
 
-    inner class WhisperViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val userImage: ImageView = itemView.findViewById(R.id.userImage)
-        val userNameText: TextView = itemView.findViewById(R.id.userNameText)
-        val whisperText: TextView = itemView.findViewById(R.id.whisperText)
-        val goodImage: ImageView = itemView.findViewById(R.id.goodImage)
-
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val userImage: ImageView = view.findViewById(R.id.userImage)
+        val userNameText: TextView = view.findViewById(R.id.userNameText)
+        val whisperText: TextView = view.findViewById(R.id.whisperText)
+        val goodImage: ImageView = view.findViewById(R.id.goodImage)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WhisperViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.whisper_recycle_row, parent, false)
-        return WhisperViewHolder(view)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.whisper_recycle_row, parent, false)
+        return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: WhisperViewHolder, position: Int) {
-        val item = whisperList[position]
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val whisper = whisperList[position]
 
-        holder.userNameText.text = item.userName
-        holder.whisperText.text = item.whisperText
+        holder.userNameText.text = whisper.userName
+        holder.whisperText.text = whisper.content
 
-        // いいね画像切り替え
+
+        if (whisper.iconPath.isNotEmpty()) {
+            Glide.with(context).load(whisper.iconPath).into(holder.userImage)
+        } else {
+            holder.userImage.setImageResource(R.drawable.ic_launcher_background)
+        }
+
         holder.goodImage.setImageResource(
-            if (item.isLiked) android.R.drawable.btn_star_big_on
-            else android.R.drawable.btn_star_big_off
+            if (whisper.goodFlg) R.drawable.btn_star_big_on else R.drawable.btn_star_big_off
         )
 
-        // 共通の画面遷移処理をラムダにまとめる
-        val goToUserInfo = {
-            val intent = Intent(context, UserInfoActivity::class.java).apply {
-                putExtra("userId", item.userId)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        }
-
-        // ユーザ画像タップ → ユーザ情報画面遷移
         holder.userImage.setOnClickListener {
-            goToUserInfo()
+            onUserImageClick(whisper)
         }
 
-        // whisperTextクリックでも同じ画面へ遷移
-        holder.itemView.setOnClickListener {
-            goToUserInfo()
-        }
-
-        // イイねクリック処理
         holder.goodImage.setOnClickListener {
-            toggleLike(item, position)
+            val pos = holder.adapterPosition
+            if (pos != RecyclerView.NO_POSITION) {
+                onGoodClick(whisper, pos)
+            }
         }
     }
 
     override fun getItemCount(): Int = whisperList.size
-
-    private fun toggleLike(item: WhisperRowData, position: Int) {
-        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/.php"
-        val client = OkHttpClient()
-
-        val json = JSONObject().apply {
-            put("userId", item.userId)
-            put("whisperNo", item.whisperId)
-            put("goodFlg", !item.isLiked)  //
-        }
-
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val requestBody = json.toString().toRequestBody(mediaType)
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, "通信に失敗しました", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!response.isSuccessful) {
-                        showError("サーバーエラー: ${response.code}")
-                        return
-                    }
-
-                    val jsonResponse = JSONObject(response.body?.string() ?: "{}")
-                    if (jsonResponse.optString("result") == "success") {
-                        item.isLiked = !item.isLiked
-                        Handler(Looper.getMainLooper()).post {
-                            notifyItemChanged(position)
-                        }
-                    } else {
-                        showError("いいね処理に失敗しました")
-                    }
-                }
-            }
-
-            private fun showError(msg: String) {
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
-    }
-
-
-    fun updateWhispers(newList: List<WhisperRowData>) {
-        whisperList.clear()
-        whisperList.addAll(newList)
-        notifyDataSetChanged()
-    }
 }

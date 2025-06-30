@@ -47,7 +47,7 @@ class FollowListActivity : OverflowMenuActivity() {
     private fun fetchFollowList(userId: String, category: String) {
         val client = OkHttpClient()
 
-        val url = "https://your-api-endpoint.com/getFollowersAndFollowing?userId=$userId&category=$category"
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/followCtl.php"
 
         val request = Request.Builder()
             .url(url)
