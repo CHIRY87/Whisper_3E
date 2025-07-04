@@ -6,6 +6,8 @@ data class WhisperRowData(
     val userName: String,
     val postDate: String,
     val content: String,
-    val goodFlg: Boolean
+    var goodCount: Int,
+    var goodFlg: Boolean,
+    val iconPath : String,
+//    val commentCount: Int
 )
-

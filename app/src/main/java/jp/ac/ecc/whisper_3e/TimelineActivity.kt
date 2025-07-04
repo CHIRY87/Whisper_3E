@@ -1,11 +1,16 @@
 package jp.ac.ecc.whisper_3e
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
@@ -32,19 +37,38 @@ class TimelineActivity : OverflowMenuActivity() {
             return
         }
 
-        adapter = WhisperAdapter(whisperList, this)
+        adapter = WhisperAdapter(
+            whisperList,
+            this,               // context
+            loginUserId ?: "",  // loginUserId as a non-null String
+            onUserImageClick = { whisper ->
+                val intent = Intent(this, UserInfoActivity::class.java).apply {
+                    putExtra("USER_ID", whisper.userId)
+                }
+                startActivity(intent)
+            },
+            onGoodClick = { whisper, position ->
+                toggleLike(whisper, position)
+            }
+        )
         timelineRecycle.adapter = adapter
+
 
         fetchTimeline()
     }
 
-    private fun fetchTimeline() {
+
+        private fun fetchTimeline() {
         val url = "https://click.ecc.ac.jp/ecc/whisper25_e/test/timelineInfo.php"
         val client = OkHttpClient()
 
-        val requestBody = FormBody.Builder()
-            .add("userId", loginUserId!!)
-            .build()
+        // Build JSON POST body with userId
+        val json = JSONObject().apply {
+            put("userId", loginUserId)
+        }
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestBody = json.toString().toRequestBody(mediaType)
 
         val request = Request.Builder()
             .url(url)
@@ -66,27 +90,25 @@ class TimelineActivity : OverflowMenuActivity() {
                     }
 
                     val responseBody = response.body?.string()
-                    Log.d("DEBUG_JSON", "Response: $responseBody")
+                    Log.d("TimelineActivity", "Response: $responseBody")
 
                     try {
                         val json = JSONObject(responseBody ?: "")
-
-                        val isError = json.optBoolean("error", false)
-                        if (isError) {
+                        if (json.optString("result") != "OK") {
                             val message = json.optString("message", "エラーが発生しました。")
                             showError(message)
                             return
                         }
 
-                        val whispers = json.optJSONArray("whispers")
-                        if (whispers != null) {
-                            parseWhispers(whispers)
+                        val whisperArray = json.optJSONArray("whisperList")
+                        if (whisperArray != null) {
+                            parseWhispers(whisperArray)
                         } else {
                             showError("ささやきデータが取得できませんでした。")
                         }
                     } catch (e: Exception) {
                         showError("JSONの解析中にエラーが発生しました。")
-                        Log.e("JSON_ERROR", "Parsing error: ${e.message}", e)
+                        Log.e("TimelineActivity", "Parsing error: ${e.message}", e)
                     }
                 }
             }
@@ -94,7 +116,7 @@ class TimelineActivity : OverflowMenuActivity() {
     }
 
     private fun parseWhispers(jsonArray: JSONArray) {
-        whisperList.clear()
+        val newList = mutableListOf<WhisperRowData>()
         for (i in 0 until jsonArray.length()) {
             val obj = jsonArray.getJSONObject(i)
             val whisper = WhisperRowData(
@@ -103,14 +125,69 @@ class TimelineActivity : OverflowMenuActivity() {
                 userName = obj.optString("userName"),
                 postDate = obj.optString("postDate"),
                 content = obj.optString("content"),
-                goodFlg = obj.optBoolean("goodFlg", false)
+                goodFlg = obj.optBoolean("goodFlg", false),
+                goodCount = obj.optInt("goodCount"),
+                iconPath = obj.optString("iconPath")
             )
-            whisperList.add(whisper)
+            newList.add(whisper)
         }
 
         runOnUiThread {
+            whisperList.clear()
+            whisperList.addAll(newList)
             adapter.notifyDataSetChanged()
         }
+    }
+
+    private fun toggleLike(whisper: WhisperRowData, position: Int) {
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userWhisperInfo.php"
+        val client = OkHttpClient()
+
+        // Prepare JSON for toggling like, note we send userId, whisperNo, and new goodFlg value
+        val json = JSONObject().apply {
+            put("userId", loginUserId)
+            put("whisperNo", whisper.whisperNo)
+            put("goodFlg", !whisper.goodFlg) // toggle
+        }
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestBody = json.toString().toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@TimelineActivity, "いいね操作に失敗しました。", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) {
+                        showError("サーバーエラー: ${response.code}")
+                        return
+                    }
+
+                    val respBody = response.body?.string()
+                    val jsonResp = JSONObject(respBody ?: "{}")
+                    if (jsonResp.optString("result") == "success") {
+                        // Update local data and notify adapter
+                        val updatedWhisper = whisper.copy(goodFlg = !whisper.goodFlg)
+                        whisperList[position] = updatedWhisper
+
+                        runOnUiThread {
+                            adapter.notifyItemChanged(position)
+                        }
+                    } else {
+                        showError("いいね処理に失敗しました。")
+                    }
+                }
+            }
+        })
     }
 
     private fun showError(message: String) {

@@ -49,21 +49,43 @@ class UserInfoActivity : OverflowMenuActivity() {
         recyclerView = findViewById(R.id.userRecycle)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
-        whisperAdapter = WhisperAdapter(mutableListOf(), this)
+
+        currentUserId = GlobalData.loginUserId ?: ""
+
+        whisperAdapter = WhisperAdapter(
+            mutableListOf(),
+            this,
+            currentUserId ?: "",
+            onUserImageClick = { whisper ->
+                val intent = Intent(this, UserInfoActivity::class.java).apply {
+                    putExtra("USER_ID", whisper.userId)
+                }
+                startActivity(intent)
+            },
+            onGoodClick = { whisper, position ->
+                val updatedWhisper = whisper.copy(
+                    goodFlg = !whisper.goodFlg,
+                    goodCount = if (!whisper.goodFlg) whisper.goodCount + 1 else maxOf(0, whisper.goodCount - 1)
+                )
+                whisperAdapter.updateWhisperAt(position, updatedWhisper)
+                // TODO: call server update here
+            }
+
+        )
+
         goodAdapter = GoodAdapter(this, mutableListOf())
         recyclerView.adapter = whisperAdapter
 
         val userId = intent.getStringExtra("USER_ID") ?: ""
         Log.d("DEBUG_USERINFO", "Received USER_ID=$userId")
 
-        if (userId.isNullOrEmpty()) {
+        if (userId.isEmpty()) {
             Toast.makeText(this, "ユーザーIDが取得できませんでした", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
         displayUserId = userId
 
-        currentUserId = GlobalData.loginUserId ?: ""
         radioGroup.check(R.id.whisperRadio)
         showingWhispers = true
 
@@ -99,7 +121,6 @@ class UserInfoActivity : OverflowMenuActivity() {
             put("loginUserId", currentUserId)
         }
         Log.d("DEBUG_USERINFO", "Request JSON: ${json.toString()}")
-        Log.d("DEBUG_RESPONSE", "UserInfoAPI response: $json")
 
         val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = json.toString().toRequestBody(mediaType)
@@ -146,27 +167,33 @@ class UserInfoActivity : OverflowMenuActivity() {
                             val whisperList = json.optJSONArray("whisperList") ?: JSONArray()
                             for (i in 0 until whisperList.length()) {
                                 val obj = whisperList.getJSONObject(i)
-                                val whisperNo = obj.optInt("whisperNo")
-                                val userId = obj.optString("userId")
-                                val userName = obj.optString("userName")
-                                val postDate = obj.optString("postDate")
-                                val content = obj.optString("content")
-                                val goodFlg = obj.optInt("goodFlg") == 1
-
-                                whispers.add(WhisperRowData(whisperNo, userId, userName, postDate, content, goodFlg))
+                                whispers.add(
+                                    WhisperRowData(
+                                        whisperNo = obj.optInt("whisperNo"),
+                                        userId = obj.optString("userId"),
+                                        userName = obj.optString("userName"),
+                                        postDate = obj.optString("postDate"),
+                                        content = obj.optString("content"),
+                                        goodCount = obj.optInt("goodCount"),
+                                        goodFlg = obj.optInt("goodFlg") == 1,
+                                        iconPath = obj.optString("iconPath")
+                                    )
+                                )
                             }
                         } else {
                             val goodList = json.optJSONArray("goodList") ?: JSONArray()
                             for (i in 0 until goodList.length()) {
                                 val obj = goodList.getJSONObject(i)
-                                val whisperNo = obj.optInt("whisperNo")
-                                val userId = obj.optString("userId")
-                                val userName = obj.optString("userName")
-                                val postDate = obj.optString("postDate")
-                                val content = obj.optString("content")
-                                val goodFlg = obj.optInt("goodFlg") == 1
-
-                                goods.add(GoodRowData(whisperNo, userId, userName, postDate, content, goodFlg))
+                                goods.add(
+                                    GoodRowData(
+                                        whisperNo = obj.optInt("whisperNo"),
+                                        userId = obj.optString("userId"),
+                                        userName = obj.optString("userName"),
+                                        postDate = obj.optString("postDate"),
+                                        content = obj.optString("content"),
+                                        goodCount = obj.optInt("goodCount")
+                                    )
+                                )
                             }
                         }
 
@@ -180,7 +207,7 @@ class UserInfoActivity : OverflowMenuActivity() {
                             if (imageUrl.isNotBlank()) {
                                 Glide.with(this@UserInfoActivity).load(imageUrl).into(userImage)
                             } else {
-                                userImage.setImageResource(R.drawable.kirito)
+                                userImage.setImageResource(R.drawable.chitoge)
                             }
 
                             followButton.visibility = if (currentUserId == displayUserId) View.GONE else View.VISIBLE
@@ -199,7 +226,6 @@ class UserInfoActivity : OverflowMenuActivity() {
             }
         })
     }
-
 
     private fun toggleFollow(followUserId: String, followFlg: Boolean) {
         val client = OkHttpClient()

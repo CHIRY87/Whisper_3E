@@ -1,5 +1,6 @@
 package jp.ac.ecc.whisper_3e
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -22,6 +23,9 @@ class SearchActivity : OverflowMenuActivity() {
     private lateinit var recyclerView: RecyclerView
 
     private val client = OkHttpClient()
+
+    // Add loginUserId from your global or intent source
+    private val loginUserId: String = GlobalData.loginUserId ?: ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +71,8 @@ class SearchActivity : OverflowMenuActivity() {
                 .post(requestBody)
                 .build()
 
+            searchButton.isEnabled = false
+
             client.newCall(request).enqueue(object : Callback {
                 override fun onFailure(call: Call, e: IOException) {
                     runOnUiThread {
@@ -82,6 +88,7 @@ class SearchActivity : OverflowMenuActivity() {
                         if (bodyString.isNullOrEmpty()) {
                             runOnUiThread {
                                 Toast.makeText(this@SearchActivity, "サーバー応答が空です", Toast.LENGTH_SHORT).show()
+                                searchButton.isEnabled = true
                             }
                             return
                         }
@@ -93,6 +100,7 @@ class SearchActivity : OverflowMenuActivity() {
                                     "サーバーから不正な応答がありました。URLが正しいか確認してください。",
                                     Toast.LENGTH_LONG
                                 ).show()
+                                searchButton.isEnabled = true
                             }
                             android.util.Log.e("SearchActivity", "Invalid response (HTML): $bodyString")
                             return
@@ -105,6 +113,7 @@ class SearchActivity : OverflowMenuActivity() {
                                 val errorMsg = json.getString("error")
                                 runOnUiThread {
                                     Toast.makeText(this@SearchActivity, errorMsg, Toast.LENGTH_SHORT).show()
+                                    searchButton.isEnabled = true
                                 }
                                 return
                             }
@@ -128,7 +137,9 @@ class SearchActivity : OverflowMenuActivity() {
                                                 userName = whisper.optString("userName"),
                                                 postDate = whisper.optString("postDate"),
                                                 content = whisper.optString("content"),
-                                                goodFlg = whisper.optBoolean("goodFlg")
+                                                goodCount = whisper.optInt("goodCount"),
+                                                goodFlg = whisper.optBoolean("goodFlg"),
+                                                iconPath = whisper.optString("iconPath")
                                             )
                                         )
                                     }
@@ -143,7 +154,7 @@ class SearchActivity : OverflowMenuActivity() {
                                                 userName = good.optString("userName"),
                                                 postDate = good.optString("postDate"),
                                                 content = good.optString("content"),
-                                                goodFlg = good.optBoolean("goodFlg")
+                                                goodCount = good.optInt("goodCount")
                                             )
                                         )
                                     }
@@ -164,6 +175,7 @@ class SearchActivity : OverflowMenuActivity() {
                                 runOnUiThread {
                                     recyclerView.adapter = UserAdapter(this@SearchActivity, users)
                                     recyclerView.visibility = View.VISIBLE
+                                    searchButton.isEnabled = true
                                 }
 
                             } else if (section == "2") {
@@ -178,30 +190,53 @@ class SearchActivity : OverflowMenuActivity() {
                                             userName = whisper.optString("userName", "No username"),
                                             postDate = whisper.optString("postDate", ""),
                                             content = whisper.optString("content", "No whisper"),
-                                            goodFlg = whisper.optBoolean("goodFlg", false)
+                                            goodCount = whisper.optInt("goodCount", 0),
+                                            goodFlg = whisper.optBoolean("goodFlg", false),
+                                            iconPath = whisper.optString("iconPath", "")
                                         )
                                     )
                                 }
 
                                 runOnUiThread {
-                                    recyclerView.adapter = WhisperAdapter(whispers, this@SearchActivity)
+                                    recyclerView.adapter = WhisperAdapter(
+                                        whispers.toMutableList(),
+                                        this@SearchActivity,
+                                        loginUserId,
+                                        onUserImageClick = { whisper ->
+                                            val intent = Intent(this@SearchActivity, UserInfoActivity::class.java).apply {
+                                                putExtra("USER_ID", whisper.userId)
+                                            }
+                                            startActivity(intent)
+                                        },
+                                        onGoodClick = { whisper, position ->
+                                            // Toggle like using immutable copy and notify adapter
+                                            val updatedWhisper = whisper.copy(
+                                                goodFlg = !whisper.goodFlg,
+                                                goodCount = if (!whisper.goodFlg) whisper.goodCount + 1 else maxOf(0, whisper.goodCount - 1)
+                                            )
+                                            whispers[position] = updatedWhisper
+                                            recyclerView.adapter?.notifyItemChanged(position)
+
+                                            // TODO: Add your server update call here if needed
+                                        }
+                                    )
                                     recyclerView.visibility = View.VISIBLE
+                                    searchButton.isEnabled = true
                                 }
                             } else {
                                 runOnUiThread {
                                     Toast.makeText(this@SearchActivity, "不明な検索区分です", Toast.LENGTH_SHORT).show()
+                                    searchButton.isEnabled = true
                                 }
                             }
 
                         } catch (e: Exception) {
                             runOnUiThread {
                                 Toast.makeText(this@SearchActivity, "JSON解析エラー: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                                searchButton.isEnabled = true
                             }
                             android.util.Log.e("SearchActivity", "JSON parsing error", e)
                         }
-                    }
-                    runOnUiThread {
-                        searchButton.isEnabled = true
                     }
                 }
             })
