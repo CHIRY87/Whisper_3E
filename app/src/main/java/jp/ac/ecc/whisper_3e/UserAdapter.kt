@@ -71,7 +71,7 @@ class UserAdapter(
 
             Log.d("UserAdapter", "Clicked userId: ${user.userId}")
             val intent = Intent(context, UserInfoActivity::class.java)
-            intent.putExtra("userId", user.userId) // ← this is missing in your case!
+            intent.putExtra("USER_ID", user.userId) // ← this is missing in your case!
             context.startActivity(intent)
             Log.d("UserAdapter", "Final userId sent: '${user.userId}'")
         }

@@ -6,5 +6,5 @@ data class GoodRowData(
     val userName: String,
     val postDate: String,
     val content: String,
-    val goodCount: Int
+    var goodCount: Int
 )

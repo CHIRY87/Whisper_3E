@@ -12,7 +12,7 @@
         android:layout_marginEnd="8dp"
         android:contentDescription="ProfileImage"
         android:scaleType="centerCrop"
-        android:src="@drawable/kirito" />
+        android:src="@drawable/chitoge" />
 
     <LinearLayout
         android:layout_width="0dp"
