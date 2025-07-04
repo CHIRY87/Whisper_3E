@@ -12,7 +12,7 @@
         android:layout_height="64dp"
         android:layout_marginEnd="8dp"
         android:contentDescription="User Icon"
-        android:src="@drawable/kirito" />
+        android:src="@drawable/chitoge" />
 
     <!-- Text Container (narrowed width) -->
     <LinearLayout
@@ -53,7 +53,7 @@
 
     <!-- Good Count -->
     <TextView
-        android:id="@+id/goodCntText"
+        android:id="@+id/goodCountText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"

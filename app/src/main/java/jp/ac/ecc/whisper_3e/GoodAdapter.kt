@@ -18,7 +18,7 @@ class GoodAdapter(
         val userImage: ImageView = itemView.findViewById(R.id.userImage)
         val userNameText: TextView = itemView.findViewById(R.id.userNameText)
         val whisperText: TextView = itemView.findViewById(R.id.whisperText)
-        val goodCntText: TextView = itemView.findViewById(R.id.goodCntText)
+        var goodCountText: TextView = itemView.findViewById(R.id.goodCountText)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoodViewHolder {
@@ -31,7 +31,8 @@ class GoodAdapter(
 
         holder.userNameText.text = currentItem.userName
         holder.whisperText.text = currentItem.content
-        holder.goodCntText.text = currentItem.goodCount.toString()
+        holder.goodCountText.text = currentItem.goodCount.toString()
+
         // Navigate to UserInfoActivity
         holder.userImage.setOnClickListener {
             val intent = Intent(context, UserInfoActivity::class.java).apply {
