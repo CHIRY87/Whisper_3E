@@ -6,6 +6,6 @@ data class WhisperRowData(
     val userName: String,
     val postDate: String,
     val content: String,
-    val goodFlg: Boolean
+    var goodFlg: Boolean
 )
 

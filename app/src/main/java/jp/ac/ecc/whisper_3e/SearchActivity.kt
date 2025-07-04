@@ -1,5 +1,6 @@
 package jp.ac.ecc.whisper_3e
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -13,14 +14,12 @@ import org.json.JSONObject
 import java.io.IOException
 
 class SearchActivity : OverflowMenuActivity() {
-
     private lateinit var searchEdit: EditText
     private lateinit var searchButton: Button
     private lateinit var radioGroup: RadioGroup
     private lateinit var userRadio: RadioButton
     private lateinit var whisperRadio: RadioButton
     private lateinit var recyclerView: RecyclerView
-
     private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +36,6 @@ class SearchActivity : OverflowMenuActivity() {
 
         searchButton.setOnClickListener {
             val query = searchEdit.text.toString().trim()
-
             if (query.isEmpty()) {
                 Toast.makeText(this, "検索内容を入力してください", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -78,7 +76,6 @@ class SearchActivity : OverflowMenuActivity() {
                 override fun onResponse(call: Call, response: Response) {
                     response.use {
                         val bodyString = response.body?.string()
-
                         if (bodyString.isNullOrEmpty()) {
                             runOnUiThread {
                                 Toast.makeText(this@SearchActivity, "サーバー応答が空です", Toast.LENGTH_SHORT).show()
@@ -88,13 +85,8 @@ class SearchActivity : OverflowMenuActivity() {
 
                         if (bodyString.trim().startsWith("<!DOCTYPE") || bodyString.trim().startsWith("<html")) {
                             runOnUiThread {
-                                Toast.makeText(
-                                    this@SearchActivity,
-                                    "サーバーから不正な応答がありました。URLが正しいか確認してください。",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                Toast.makeText(this@SearchActivity, "サーバーから不正な応答がありました。", Toast.LENGTH_LONG).show()
                             }
-                            android.util.Log.e("SearchActivity", "Invalid response (HTML): $bodyString")
                             return
                         }
 
@@ -114,90 +106,44 @@ class SearchActivity : OverflowMenuActivity() {
                                 val users = mutableListOf<UserRowData>()
                                 for (i in 0 until userList.length()) {
                                     val user = userList.getJSONObject(i)
-
-                                    val whisperArray = user.optJSONArray("whisperList") ?: JSONArray()
-                                    val goodArray = user.optJSONArray("goodList") ?: JSONArray()
-
-                                    val whispers = mutableListOf<WhisperRowData>()
-                                    for (j in 0 until whisperArray.length()) {
-                                        val whisper = whisperArray.getJSONObject(j)
-                                        whispers.add(
-                                            WhisperRowData(
-                                                whisperNo = whisper.optInt("whisperNo"),
-                                                userId = whisper.optString("userId"),
-                                                userName = whisper.optString("userName"),
-                                                postDate = whisper.optString("postDate"),
-                                                content = whisper.optString("content"),
-                                                goodFlg = whisper.optBoolean("goodFlg")
-                                            )
-                                        )
-                                    }
-
-                                    val goods = mutableListOf<GoodRowData>()
-                                    for (j in 0 until goodArray.length()) {
-                                        val good = goodArray.getJSONObject(j)
-                                        goods.add(
-                                            GoodRowData(
-                                                whisperNo = good.optInt("whisperNo"),
-                                                userId = good.optString("userId"),
-                                                userName = good.optString("userName"),
-                                                postDate = good.optString("postDate"),
-                                                content = good.optString("content"),
-                                                goodFlg = good.optBoolean("goodFlg")
-                                            )
-                                        )
-                                    }
-
                                     users.add(
                                         UserRowData(
-                                            userId = user.optString("userId"),
-                                            userName = user.optString("userName"),
-                                            profile = user.optString("profile"),
-                                            userFollowFlg = user.optBoolean("userFollowFlg"),
-                                            followCount = user.optInt("followCount"),
-                                            followerCount = user.optInt("followerCount"),
-                                            whisperList = whispers,
-                                            goodList = goods
+                                            userId = user.optString("userId", ""),
+                                            userName = user.optString("userName", "No username"),
+                                            profile = user.optString("profile", ""),           // you may need to check your JSON for this
+                                            userFollowFlg = user.optInt("userFollowFlg", 0) == 1,
+                                            followCount = user.optInt("followCount", 0),
+                                            followerCount = user.optInt("followerCount", 0),
+                                            whisperList = emptyList(),                          // or fetch if available
+                                            goodList = emptyList()                              // or fetch if available
                                         )
                                     )
                                 }
-                                runOnUiThread {
-                                    recyclerView.adapter = UserAdapter(this@SearchActivity, users)
-                                    recyclerView.visibility = View.VISIBLE
-                                }
-
                             } else if (section == "2") {
                                 val whisperList = json.optJSONArray("whisperList") ?: JSONArray()
-                                val whispers = mutableListOf<WhisperRowData>()
+                                val whisperDataList = mutableListOf<WhisperRowData>()
                                 for (i in 0 until whisperList.length()) {
                                     val whisper = whisperList.getJSONObject(i)
-                                    whispers.add(
+                                    whisperDataList.add(
                                         WhisperRowData(
-                                            whisperNo = whisper.optInt("whisperNo"),
-                                            userId = whisper.optString("userId"),
+                                            whisperNo = whisper.optInt("whisperNo", 0),
+                                            userId = whisper.optString("userId", ""),
                                             userName = whisper.optString("userName", "No username"),
                                             postDate = whisper.optString("postDate", ""),
                                             content = whisper.optString("content", "No whisper"),
-                                            goodFlg = whisper.optBoolean("goodFlg", false)
+                                            goodFlg = whisper.optInt("goodFlg", 0) == 1
                                         )
                                     )
                                 }
-
                                 runOnUiThread {
-                                    recyclerView.adapter = WhisperAdapter(whispers, this@SearchActivity)
+                                    recyclerView.adapter = WhisperAdapter(whisperDataList, this@SearchActivity)
                                     recyclerView.visibility = View.VISIBLE
                                 }
-                            } else {
-                                runOnUiThread {
-                                    Toast.makeText(this@SearchActivity, "不明な検索区分です", Toast.LENGTH_SHORT).show()
-                                }
                             }
-
                         } catch (e: Exception) {
                             runOnUiThread {
                                 Toast.makeText(this@SearchActivity, "JSON解析エラー: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                             }
-                            android.util.Log.e("SearchActivity", "JSON parsing error", e)
                         }
                     }
                     runOnUiThread {
