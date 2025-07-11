@@ -30,8 +30,8 @@ try {
   if ($goodFlg == true) {
     // INSERT
     $sql = "
-      INSERT INTO goodInfo (userId, whisperNo, createdAt)
-      VALUES (:userId, :whisperNo, NOW())
+      INSERT INTO goodInfo (userId, whisperNo)
+      VALUES (:userId, :whisperNo)
     ";
   } else {
     // DELETE
