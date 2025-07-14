@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 
 import android.view.LayoutInflater
 import android.view.View
@@ -83,10 +82,9 @@ class WhisperAdapter(
             val currentPosition = holder.adapterPosition
             //３－４－４－１．イイね管理処理APIをリクエストして入力した対象行のささやきのイイねの登録・解除を行う
             val client = OkHttpClient()
-            val currentUserId = GlobalData.loginUserId ?: ""
-            Log.d("currentUserId", "currentUserId: $currentUserId")
+
             val json = JSONObject().apply {
-                put("userId", currentUserId)
+                put("userId", item.userId)
                 put("whisperNo", item.whisperNo)
                 put("goodFlg", !item.goodFlg)
             }

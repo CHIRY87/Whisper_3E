@@ -73,11 +73,11 @@ class UserInfoActivity : OverflowMenuActivity() {
         radioGroup.check(R.id.whisperRadio)
         showingWhispers = true
 
-        fetchUserData(displayUserId!!, true)
+        fetchUserData(displayUserId!!)
 
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
             showingWhispers = (checkedId == R.id.whisperRadio)
-            fetchUserData(displayUserId!!, false)
+            fetchUserData(displayUserId!!)
             recyclerView.adapter = if (showingWhispers) whisperAdapter else goodAdapter
         }
 
@@ -112,7 +112,7 @@ class UserInfoActivity : OverflowMenuActivity() {
     }
 
     //２－３．ユーザささやき情報取得API　共通実行メソッドを呼び出す
-    private fun fetchUserData(userId: String, initFlg: Boolean) {
+    private fun fetchUserData(userId: String) {
         val client = OkHttpClient()
         val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userWhisperInfo.php"
         val json = JSONObject().apply {
@@ -203,11 +203,7 @@ class UserInfoActivity : OverflowMenuActivity() {
                             profileText.text = profile
                             followCntText.text = ": $followCnt"
                             followerCntText.text = ": $followerCnt"
-                            if(initFlg){
-                                isFollowing = followFlag
-                            }else{
-                                isFollowing = !isFollowing
-                            }
+                            isFollowing = !isFollowing
                             if (isFollowing) {
                                 followButton.text = "Unfollow"
                             } else {
@@ -286,7 +282,7 @@ class UserInfoActivity : OverflowMenuActivity() {
                             return
                         }
                         runOnUiThread {
-                            fetchUserData(followUserId, false)
+                            fetchUserData(followUserId)
                         }
                     } catch (e: Exception) {
                         runOnUiThread {
@@ -299,7 +295,8 @@ class UserInfoActivity : OverflowMenuActivity() {
     }
     override fun onUserEdited() {
         displayUserId?.let {
-            fetchUserData(it, false)
+            fetchUserData(it)
         }
     }
+
 }
