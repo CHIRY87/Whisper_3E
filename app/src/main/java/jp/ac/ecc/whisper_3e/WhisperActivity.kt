@@ -3,10 +3,7 @@ package jp.ac.ecc.whisper_3e
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -42,12 +39,12 @@ class WhisperActivity : OverflowMenuActivity() {
                 return@setOnClickListener
             }
 
-            Log.d("ログインID", loggedInUserId.toString())
             if (loggedInUserId.isNullOrEmpty()) {
                 Toast.makeText(this, "ユーザーIDが取得できません。ログインし直してください。", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            Log.d("ログインID", loggedInUserId)
             sendWhisperRequest(loggedInUserId, whisperContent)
         }
 
@@ -57,7 +54,7 @@ class WhisperActivity : OverflowMenuActivity() {
     }
 
     private fun sendWhisperRequest(userId: String, whisperContent: String) {
-        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/whisperAdd.php"
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/WhisperAdd.php"
 
         val json = JSONObject().apply {
             put("userId", userId)
@@ -74,6 +71,7 @@ class WhisperActivity : OverflowMenuActivity() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
+                Log.e("WhisperError", "通信失敗: ${e.message}", e)
                 runOnUiThread {
                     Toast.makeText(
                         this@WhisperActivity,
@@ -90,9 +88,7 @@ class WhisperActivity : OverflowMenuActivity() {
                     if (response.isSuccessful && responseBody != null) {
                         try {
                             val jsonResponse = JSONObject(responseBody)
-                            val result = jsonResponse.optString("result", "")
-
-                            when (result) {
+                            when (jsonResponse.optString("result", "")) {
                                 "success" -> {
                                     Toast.makeText(
                                         this@WhisperActivity,
@@ -100,19 +96,15 @@ class WhisperActivity : OverflowMenuActivity() {
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     whisperEdit.text.clear()
-
-                                    startActivity(
-                                        Intent(
-                                            this@WhisperActivity,
-                                            TimelineActivity::class.java
-                                        )
-                                    )
+                                    startActivity(Intent(this@WhisperActivity, TimelineActivity::class.java))
                                     finish()
                                 }
+
                                 "error" -> {
                                     val errMsg = jsonResponse.optString("errMsg", "エラーが発生しました")
                                     Toast.makeText(this@WhisperActivity, errMsg, Toast.LENGTH_SHORT).show()
                                 }
+
                                 else -> {
                                     Toast.makeText(
                                         this@WhisperActivity,

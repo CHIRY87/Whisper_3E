@@ -6,5 +6,6 @@ data class GoodRowData(
     val userName: String,
     val postDate: String,
     val content: String,
-    var goodCount: Int
+    var goodCount: Int,
+    val iconPath: String
 )

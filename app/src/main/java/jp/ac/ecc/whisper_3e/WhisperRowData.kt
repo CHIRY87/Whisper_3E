@@ -9,5 +9,4 @@ data class WhisperRowData(
     var goodCount: Int,
     var goodFlg: Boolean,
     val iconPath : String,
-//    val commentCount: Int
 )

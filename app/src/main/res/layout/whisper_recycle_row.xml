@@ -50,4 +50,5 @@
         android:layout_marginStart="8dp"
         android:contentDescription="Like button"
         android:src="@android:drawable/btn_star_big_off" />
+
 </LinearLayout>

@@ -33,8 +33,7 @@
         <activity android:name=".CreateUserActivity" android:exported="false" />
         <activity android:name=".UserEditActivity" android:exported="false" />
         <activity android:name=".SearchActivity" android:exported="false" />
-
-
+        <activity android:name=".FollowListActivity" android:exported="false" />
 
     </application>
 
