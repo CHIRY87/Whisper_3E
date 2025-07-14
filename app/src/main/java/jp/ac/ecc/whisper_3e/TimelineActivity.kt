@@ -2,8 +2,6 @@ package jp.ac.ecc.whisper_3e
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,30 +37,18 @@ class TimelineActivity : OverflowMenuActivity() {
 
         adapter = WhisperAdapter(
             whisperList,
-            this,               // context
-            loginUserId ?: "",  // loginUserId as a non-null String
-            onUserImageClick = { whisper ->
-                val intent = Intent(this, UserInfoActivity::class.java).apply {
-                    putExtra("USER_ID", whisper.userId)
-                }
-                startActivity(intent)
-            },
-            onGoodClick = { whisper, position ->
-                toggleLike(whisper, position)
-            }
+            this,
         )
-        timelineRecycle.adapter = adapter
 
+        timelineRecycle.adapter = adapter
 
         fetchTimeline()
     }
 
-
-        private fun fetchTimeline() {
-        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/test/timelineInfo.php"
+    private fun fetchTimeline() {
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/timelineInfo.php"
         val client = OkHttpClient()
 
-        // Build JSON POST body with userId
         val json = JSONObject().apply {
             put("userId", loginUserId)
         }
@@ -139,15 +125,14 @@ class TimelineActivity : OverflowMenuActivity() {
         }
     }
 
-    private fun toggleLike(whisper: WhisperRowData, position: Int) {
+    private fun toggleLike(whisper: WhisperRowData, position: Int, onComplete: () -> Unit) {
         val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userWhisperInfo.php"
         val client = OkHttpClient()
 
-        // Prepare JSON for toggling like, note we send userId, whisperNo, and new goodFlg value
         val json = JSONObject().apply {
             put("userId", loginUserId)
             put("whisperNo", whisper.whisperNo)
-            put("goodFlg", !whisper.goodFlg) // toggle
+            put("goodFlg", !whisper.goodFlg)
         }
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -162,6 +147,7 @@ class TimelineActivity : OverflowMenuActivity() {
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
                     Toast.makeText(this@TimelineActivity, "いいね操作に失敗しました。", Toast.LENGTH_SHORT).show()
+                    onComplete()
                 }
             }
 
@@ -169,21 +155,23 @@ class TimelineActivity : OverflowMenuActivity() {
                 response.use {
                     if (!response.isSuccessful) {
                         showError("サーバーエラー: ${response.code}")
+                        runOnUiThread { onComplete() }
                         return
                     }
 
                     val respBody = response.body?.string()
                     val jsonResp = JSONObject(respBody ?: "{}")
                     if (jsonResp.optString("result") == "success") {
-                        // Update local data and notify adapter
                         val updatedWhisper = whisper.copy(goodFlg = !whisper.goodFlg)
                         whisperList[position] = updatedWhisper
 
                         runOnUiThread {
                             adapter.notifyItemChanged(position)
+                            onComplete()
                         }
                     } else {
                         showError("いいね処理に失敗しました。")
+                        runOnUiThread { onComplete() }
                     }
                 }
             }

@@ -15,6 +15,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 
+//１．OverFlowMenuActivityクラスを継承する
 class UserInfoActivity : OverflowMenuActivity() {
 
     private lateinit var userImage: ImageView
@@ -25,9 +26,11 @@ class UserInfoActivity : OverflowMenuActivity() {
     private lateinit var followButton: Button
     private lateinit var radioGroup: RadioGroup
     private lateinit var recyclerView: RecyclerView
+    private lateinit var followText: TextView
+    private lateinit var followerText: TextView
 
-    private lateinit var whisperAdapter: WhisperAdapter
-    private lateinit var goodAdapter: GoodAdapter
+    private var whisperAdapter: WhisperAdapter = WhisperAdapter(mutableListOf(), this)
+    private var goodAdapter: GoodAdapter = GoodAdapter(mutableListOf(), this)
 
     private var currentUserId: String? = null
     private var isFollowing = false
@@ -35,7 +38,9 @@ class UserInfoActivity : OverflowMenuActivity() {
 
     private var displayUserId: String? = null
 
+    //２．画面生成時（onCreate処理）
     override fun onCreate(savedInstanceState: Bundle?) {
+        //２－１．画面デザインで定義したオブジェクトを変数として宣言する
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_info)
 
@@ -47,35 +52,14 @@ class UserInfoActivity : OverflowMenuActivity() {
         followButton = findViewById(R.id.followButton)
         radioGroup = findViewById(R.id.radioGroup)
         recyclerView = findViewById(R.id.userRecycle)
+        followText = findViewById(R.id.followText)
+        followerText = findViewById(R.id.followerText)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         currentUserId = GlobalData.loginUserId ?: ""
 
-        whisperAdapter = WhisperAdapter(
-            mutableListOf(),
-            this,
-            currentUserId ?: "",
-            onUserImageClick = { whisper ->
-                val intent = Intent(this, UserInfoActivity::class.java).apply {
-                    putExtra("USER_ID", whisper.userId)
-                }
-                startActivity(intent)
-            },
-            onGoodClick = { whisper, position ->
-                val updatedWhisper = whisper.copy(
-                    goodFlg = !whisper.goodFlg,
-                    goodCount = if (!whisper.goodFlg) whisper.goodCount + 1 else maxOf(0, whisper.goodCount - 1)
-                )
-                whisperAdapter.updateWhisperAt(position, updatedWhisper)
-                // TODO: call server update here
-            }
-
-        )
-
-        goodAdapter = GoodAdapter(this, mutableListOf())
-        recyclerView.adapter = whisperAdapter
-
+        //２－２．インテント(前画面)から対象ユーザIDを取得する
         val userId = intent.getStringExtra("USER_ID") ?: ""
         Log.d("DEBUG_USERINFO", "Received USER_ID=$userId")
 
@@ -93,15 +77,29 @@ class UserInfoActivity : OverflowMenuActivity() {
 
         radioGroup.setOnCheckedChangeListener { _, checkedId ->
             showingWhispers = (checkedId == R.id.whisperRadio)
-            recyclerView.adapter = if (showingWhispers) whisperAdapter else goodAdapter
             fetchUserData(displayUserId!!)
+            recyclerView.adapter = if (showingWhispers) whisperAdapter else goodAdapter
         }
 
-        followCntText.setOnClickListener { startFollowListActivity("follow") }
-        followerCntText.setOnClickListener { startFollowListActivity("follower") }
+        followText.setOnClickListener {
+            startFollowListActivity("follow")
+        }
+        followerText.setOnClickListener {
+            startFollowListActivity("follower")
+        }
+        followCntText.setOnClickListener {
+            startFollowListActivity("follow")
+        }
+        followerCntText.setOnClickListener {
+            startFollowListActivity("follower")
+        }
 
         followButton.setOnClickListener {
-            displayUserId?.let { toggleFollow(it, !isFollowing) }
+            displayUserId?.let { userId ->
+                Log.d("displayuserid", "$displayUserId")
+                Log.d("DEBUG_CLICK", "Before toggle: isFollowing=$isFollowing")
+                toggleFollow(userId, !isFollowing)
+            }
         }
     }
 
@@ -113,6 +111,7 @@ class UserInfoActivity : OverflowMenuActivity() {
         startActivity(intent)
     }
 
+    //２－３．ユーザささやき情報取得API　共通実行メソッドを呼び出す
     private fun fetchUserData(userId: String) {
         val client = OkHttpClient()
         val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userWhisperInfo.php"
@@ -161,7 +160,7 @@ class UserInfoActivity : OverflowMenuActivity() {
                         val imageUrl = json.optString("image")
 
                         val whispers = mutableListOf<WhisperRowData>()
-                        val goods = mutableListOf<GoodRowData>()
+                        val goods = mutableListOf<WhisperRowData>()
 
                         if (showingWhispers) {
                             val whisperList = json.optJSONArray("whisperList") ?: JSONArray()
@@ -185,13 +184,15 @@ class UserInfoActivity : OverflowMenuActivity() {
                             for (i in 0 until goodList.length()) {
                                 val obj = goodList.getJSONObject(i)
                                 goods.add(
-                                    GoodRowData(
+                                    WhisperRowData(
                                         whisperNo = obj.optInt("whisperNo"),
                                         userId = obj.optString("userId"),
                                         userName = obj.optString("userName"),
                                         postDate = obj.optString("postDate"),
                                         content = obj.optString("content"),
-                                        goodCount = obj.optInt("goodCount")
+                                        goodCount = obj.optInt("goodCount"),
+                                        goodFlg = obj.optInt("goodFlg") == 1,
+                                        iconPath = obj.optString("iconPath")
                                     )
                                 )
                             }
@@ -202,7 +203,12 @@ class UserInfoActivity : OverflowMenuActivity() {
                             profileText.text = profile
                             followCntText.text = ": $followCnt"
                             followerCntText.text = ": $followerCnt"
-                            isFollowing = followFlag
+                            isFollowing = !isFollowing
+                            if (isFollowing) {
+                                followButton.text = "Unfollow"
+                            } else {
+                                followButton.text = "Follow"
+                            }
 
                             if (imageUrl.isNotBlank()) {
                                 Glide.with(this@UserInfoActivity).load(imageUrl).into(userImage)
@@ -211,11 +217,16 @@ class UserInfoActivity : OverflowMenuActivity() {
                             }
 
                             followButton.visibility = if (currentUserId == displayUserId) View.GONE else View.VISIBLE
-                            followButton.text = if (isFollowing) "フォロー解除" else "フォローする"
 
-                            if (showingWhispers) whisperAdapter.updateWhispers(whispers)
-                            else goodAdapter.updateGood(goods)
+                            if (showingWhispers) {
+                                whisperAdapter = WhisperAdapter(whispers, this@UserInfoActivity)
+                            } else {
+                                whisperAdapter = WhisperAdapter(goods, this@UserInfoActivity)
+                            }
+                            recyclerView.adapter = whisperAdapter
+
                         }
+
                     } catch (e: Exception) {
                         Log.e("UserInfoActivity", "JSON parsing error", e)
                         runOnUiThread {
@@ -230,8 +241,13 @@ class UserInfoActivity : OverflowMenuActivity() {
     private fun toggleFollow(followUserId: String, followFlg: Boolean) {
         val client = OkHttpClient()
         val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/followCtl.php"
+        Log.d("currentuser", "$currentUserId")
+        Log.d("followuser", "$followUserId")
+        Log.d("followflg", "$followFlg")
+        Log.d("UserInfoActivity", "Current isFollowing = $isFollowing")
+
         val json = JSONObject().apply {
-            put("loginUserId", currentUserId)
+            put("userId", currentUserId)
             put("followUserId", followUserId)
             put("followFlg", followFlg)
         }
@@ -249,6 +265,8 @@ class UserInfoActivity : OverflowMenuActivity() {
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     val bodyStr = it.body?.string()
+                    Log.d("FOLLOW_API", "Response: $bodyStr")
+
                     if (bodyStr.isNullOrEmpty()) {
                         runOnUiThread {
                             Toast.makeText(this@UserInfoActivity, "サーバーからの応答がありません。", Toast.LENGTH_SHORT).show()
@@ -263,10 +281,7 @@ class UserInfoActivity : OverflowMenuActivity() {
                             }
                             return
                         }
-
-                        isFollowing = followFlg
                         runOnUiThread {
-                            followButton.text = if (isFollowing) "フォロー解除" else "フォローする"
                             fetchUserData(followUserId)
                         }
                     } catch (e: Exception) {
@@ -278,4 +293,10 @@ class UserInfoActivity : OverflowMenuActivity() {
             }
         })
     }
+    override fun onUserEdited() {
+        displayUserId?.let {
+            fetchUserData(it)
+        }
+    }
+
 }

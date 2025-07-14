@@ -8,11 +8,26 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 
 open class OverflowMenuActivity : AppCompatActivity() {
+    protected open fun onUserEdited() {
+        // 子クラスでオーバーライドされる
+    }
+
+    protected lateinit var userEditLauncher: ActivityResultLauncher<Intent>
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        userEditLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == RESULT_OK) {
+                onUserEdited()
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -58,7 +73,7 @@ open class OverflowMenuActivity : AppCompatActivity() {
                 }
                 val intent = Intent(this, UserEditActivity::class.java)
                 intent.putExtra("USER_ID", currentUserId)
-                startActivity(intent)
+                userEditLauncher.launch(intent)
                 return true
             }
 
