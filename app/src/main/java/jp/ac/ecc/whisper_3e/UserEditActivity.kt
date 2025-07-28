@@ -167,6 +167,7 @@ class UserEditActivity : AppCompatActivity() {
 
                         if (result == "success") {
                             Toast.makeText(this@UserEditActivity, "ユーザー情報を更新しました。", Toast.LENGTH_SHORT).show()
+                            setResult(RESULT_OK)
                             finish()
                         } else {
                             val errMsg = jsonResponse.optString("errMsg", "更新に失敗しました。")

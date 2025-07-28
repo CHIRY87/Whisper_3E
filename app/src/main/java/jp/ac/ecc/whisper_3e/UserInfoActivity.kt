@@ -302,5 +302,4 @@ class UserInfoActivity : OverflowMenuActivity() {
             fetchUserData(it, false)
         }
     }
-
 }
