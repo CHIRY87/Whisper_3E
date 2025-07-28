@@ -29,9 +29,8 @@
 
         <RadioButton
             android:id="@+id/userRadio"
-            android:layout_width="match_parent"
+            android:layout_width="150dp"
             android:layout_height="wrap_content"
-            android:layout_marginRight="50sp"
             android:text="User"
             android:textColor="#8D8D8D"
             android:textSize="34sp" />
