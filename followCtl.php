@@ -16,7 +16,7 @@ if (!isset($followFlg)) returnError("013");
 try {
     $pdo->beginTransaction();
 
-    if ($followFlg === true) {
+    if (filter_var($followFlg, FILTER_VALIDATE_BOOLEAN)) {
         // follow 登録
         $sql = "INSERT INTO follow (userId, followUserId) VALUES (:userId, :followUserId)";
         $stmt = $pdo->prepare($sql);
