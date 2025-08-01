@@ -1,0 +1,186 @@
+package jp.ac.ecc.whisper_3e
+
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
+
+class TimelineActivity : OverflowMenuActivity() {
+
+    private lateinit var timelineRecycle: RecyclerView
+    private var loginUserId: String? = null
+    private val whisperList = mutableListOf<WhisperRowData>()
+    private lateinit var adapter: WhisperAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_timeline)
+
+        timelineRecycle = findViewById(R.id.timelineRecycle)
+        timelineRecycle.layoutManager = LinearLayoutManager(this)
+
+        loginUserId = GlobalData.loginUserId
+
+        if (loginUserId.isNullOrEmpty()) {
+            Toast.makeText(this, "ユーザーIDが無効です。再度ログインしてください。", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        adapter = WhisperAdapter(
+            whisperList,
+            this,
+        )
+
+        timelineRecycle.adapter = adapter
+
+        fetchTimeline()
+    }
+
+    private fun fetchTimeline() {
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/timelineInfo.php"
+        val client = OkHttpClient()
+
+        val json = JSONObject().apply {
+            put("userId", loginUserId)
+        }
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestBody = json.toString().toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@TimelineActivity, "通信に失敗しました", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) {
+                        showError("サーバーエラー: ${response.code}")
+                        return
+                    }
+
+                    val responseBody = response.body?.string()
+                    Log.d("TimelineActivity", "Response: $responseBody")
+
+                    try {
+                        val json = JSONObject(responseBody ?: "")
+                        if (json.optString("result") != "OK") {
+                            val message = json.optString("message", "エラーが発生しました。")
+                            showError(message)
+                            return
+                        }
+
+                        val whisperArray = json.optJSONArray("whisperList")
+                        if (whisperArray != null) {
+                            parseWhispers(whisperArray)
+                        } else {
+                            showError("ささやきデータが取得できませんでした。")
+                        }
+                    } catch (e: Exception) {
+                        showError("JSONの解析中にエラーが発生しました。")
+                        Log.e("TimelineActivity", "Parsing error: ${e.message}", e)
+                    }
+                }
+            }
+        })
+    }
+
+    private fun parseWhispers(jsonArray: JSONArray) {
+        val newList = mutableListOf<WhisperRowData>()
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.getJSONObject(i)
+            val whisper = WhisperRowData(
+                whisperNo = obj.optInt("whisperNo"),
+                userId = obj.optString("userId"),
+                userName = obj.optString("userName"),
+                postDate = obj.optString("postDate"),
+                content = obj.optString("content"),
+                goodFlg = obj.optBoolean("goodFlg", false),
+                goodCount = obj.optInt("goodCount"),
+                iconPath = obj.optString("iconPath")
+            )
+            newList.add(whisper)
+        }
+
+        runOnUiThread {
+            whisperList.clear()
+            whisperList.addAll(newList)
+            adapter.notifyDataSetChanged()
+        }
+    }
+
+    private fun toggleLike(whisper: WhisperRowData, position: Int, onComplete: () -> Unit) {
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userWhisperInfo.php"
+        val client = OkHttpClient()
+
+        val json = JSONObject().apply {
+            put("userId", loginUserId)
+            put("whisperNo", whisper.whisperNo)
+            put("goodFlg", !whisper.goodFlg)
+        }
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestBody = json.toString().toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@TimelineActivity, "いいね操作に失敗しました。", Toast.LENGTH_SHORT).show()
+                    onComplete()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) {
+                        showError("サーバーエラー: ${response.code}")
+                        runOnUiThread { onComplete() }
+                        return
+                    }
+
+                    val respBody = response.body?.string()
+                    val jsonResp = JSONObject(respBody ?: "{}")
+                    if (jsonResp.optString("result") == "success") {
+                        val updatedWhisper = whisper.copy(goodFlg = !whisper.goodFlg)
+                        whisperList[position] = updatedWhisper
+
+                        runOnUiThread {
+                            adapter.notifyItemChanged(position)
+                            onComplete()
+                        }
+                    } else {
+                        showError("いいね処理に失敗しました。")
+                        runOnUiThread { onComplete() }
+                    }
+                }
+            }
+        })
+    }
+
+    private fun showError(message: String) {
+        runOnUiThread {
+            Toast.makeText(this@TimelineActivity, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+}

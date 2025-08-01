@@ -1,16 +1,24 @@
 package jp.ac.ecc.whisper_3e;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.*;
+
 public class CreateUserActivity extends AppCompatActivity {
 
     private EditText nicknameEdit, emailEdit, passwordEdit, confirmPasswordEdit;
     private Button createButton, cancelButton;
+    private final OkHttpClient client = new OkHttpClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,55 +32,79 @@ public class CreateUserActivity extends AppCompatActivity {
         createButton = findViewById(R.id.createButton);
         cancelButton = findViewById(R.id.cancelButton);
 
-        // ユーザ作成ボタンのクリックイベントリスナー
-        createButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // 入力項目の検証
-                if (nicknameEdit.getText().toString().isEmpty() ||
-                        emailEdit.getText().toString().isEmpty() ||
-                        passwordEdit.getText().toString().isEmpty() ||
-                        confirmPasswordEdit.getText().toString().isEmpty()) {
-                    Toast.makeText(CreateUserActivity.this, "全ての項目を入力してください", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+        createButton.setOnClickListener(v -> {
+            String nickname = nicknameEdit.getText().toString().trim();
+            String email = emailEdit.getText().toString().trim();
+            String password = passwordEdit.getText().toString().trim();
+            String confirmPassword = confirmPasswordEdit.getText().toString().trim();
 
-                // パスワード確認
-                if (!passwordEdit.getText().toString().equals(confirmPasswordEdit.getText().toString())) {
-                    Toast.makeText(CreateUserActivity.this, "パスワードが一致しません", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // ユーザ作成処理API呼び出し（仮のAPIリクエスト）
-                createUser();
+            if (nickname.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+                Toast.makeText(this, "全ての項目を入力してください", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            if (!password.equals(confirmPassword)) {
+                Toast.makeText(this, "パスワードが一致しません", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            sendCreateUserRequest(nickname, email, password);
         });
 
-        // キャンセルボタンのクリックイベントリスナー
-        cancelButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // この画面を閉じる
-                finish();
-            }
-        });
+        cancelButton.setOnClickListener(v -> finish());
     }
 
-    private void createUser() {
-        // APIリクエストを行い、ユーザを作成する処理
-        // 仮に成功した場合の処理
-        // 例えば、レスポンスが正常であれば以下のような処理になります
-        String createdUserId = "new_user_id";  // 仮のユーザID
-        Toast.makeText(CreateUserActivity.this, "ユーザが作成されました", Toast.LENGTH_SHORT).show();
+    private void sendCreateUserRequest(String nickname, String email, String password) {
+        String url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userAdd.php";
 
-        // グローバル変数にユーザIDを格納
-        // loginUserId = createdUserId;
+        JSONObject json = new JSONObject();
+        try {
+            json.put("userId", email);
+            json.put("userName", nickname);
+            json.put("password", password);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return;
+        }
 
-        // タイムライン画面に遷移
-        // Intent intent = new Intent(CreateUserActivity.this, TimelineActivity.class);
-        // startActivity(intent);
+        RequestBody body = RequestBody.create(
+                json.toString(),
+                MediaType.parse("application/json; charset=utf-8")
+        );
 
-        // 自分の画面を閉じる
-        finish();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() ->
+                        Toast.makeText(CreateUserActivity.this, "通信エラー: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resStr = response.body().string();
+                runOnUiThread(() -> {
+                    try {
+                        JSONObject res = new JSONObject(resStr);
+                        if ("success".equals(res.optString("result"))) {
+                            Toast.makeText(CreateUserActivity.this, "ユーザー登録成功", Toast.LENGTH_SHORT).show();
+                            GlobalData.loginUserId = email;
+                            startActivity(new Intent(CreateUserActivity.this, TimelineActivity.class));
+                            finish();
+                        } else {
+                            String errMsg = res.optString("errMsg", "登録に失敗しました");
+                            Toast.makeText(CreateUserActivity.this, errMsg, Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(CreateUserActivity.this, "レスポンス解析エラー", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
     }
 }
