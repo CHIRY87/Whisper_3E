@@ -33,7 +33,8 @@
             android:layout_height="wrap_content"
             android:text="User"
             android:textColor="#8D8D8D"
-            android:textSize="34sp" />
+            android:textSize="34sp"
+            android:checked="true"/>
 
         <RadioButton
             android:id="@+id/whisperRadio"
