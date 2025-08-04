@@ -1,6 +1,8 @@
 package jp.ac.ecc.whisper_3e
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,6 +24,10 @@ class SearchActivity : OverflowMenuActivity() {
     private lateinit var recyclerView: RecyclerView
     lateinit var adapter: WhisperAdapter
 
+    private val handler = android.os.Handler()
+    private var searchRunnable: Runnable? = null
+    private val DEBOUNCE_DELAY = 300L
+
     private val client = OkHttpClient()
     private val loginUserId: String = GlobalData.loginUserId ?: ""
 
@@ -37,23 +43,39 @@ class SearchActivity : OverflowMenuActivity() {
         recyclerView = findViewById(R.id.searchRecycle)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
+        searchEdit.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                searchRunnable?.let { handler.removeCallbacks(it) }
+            }
+            override fun afterTextChanged(s: Editable?) {
+                val query = s.toString().trim()
+                if (query.isEmpty()) {
+                    recyclerView.visibility = View.GONE
+                    return
+                }
+                searchRunnable = Runnable {
+                    performSearch(query)
+                }
+                handler.postDelayed(searchRunnable!!, DEBOUNCE_DELAY)
+            }
+        })
+
         searchButton.setOnClickListener {
             val query = searchEdit.text.toString().trim()
-
             if (query.isEmpty()) {
                 Toast.makeText(this, "検索内容を入力してください", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+            performSearch(query)
+        }
+    }
 
+        private fun performSearch(query: String) {
             val section = when (radioGroup.checkedRadioButtonId) {
                 R.id.userRadio -> "1"
                 R.id.whisperRadio -> "2"
                 else -> ""
-            }
-
-            if (section.isEmpty()) {
-                Toast.makeText(this, "検索区分を選択してください", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
             }
 
             val json = JSONObject().apply {
@@ -210,5 +232,4 @@ class SearchActivity : OverflowMenuActivity() {
                 }
             })
         }
-    }
 }

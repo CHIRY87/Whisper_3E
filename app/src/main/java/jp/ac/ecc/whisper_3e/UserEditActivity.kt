@@ -1,5 +1,8 @@
 package jp.ac.ecc.whisper_3e
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.*
@@ -10,9 +13,12 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 
 class UserEditActivity : AppCompatActivity() {
-
+    private lateinit var imagePickerLauncher: ActivityResultLauncher<Intent>
+    private var selectedImageUri: Uri? = null
     private lateinit var userNameEdit: EditText
     private lateinit var profileEdit: EditText
     private lateinit var userImage: ImageView
@@ -47,6 +53,24 @@ class UserEditActivity : AppCompatActivity() {
         userIdText.text = userId
         loadUserInfo(userId!!)
 
+        imagePickerLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data = result.data
+                selectedImageUri = data?.data
+                selectedImageUri?.let {
+                    userImage.setImageURI(it)
+                }
+            }
+        }
+
+        userImage.setOnClickListener {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+            }
+            imagePickerLauncher.launch(Intent.createChooser(intent, "画像を選択"))
+        }
         changeButton.setOnClickListener {
             val userName = userNameEdit.text.toString().trim()
             val profile = profileEdit.text.toString().trim()
@@ -66,7 +90,7 @@ class UserEditActivity : AppCompatActivity() {
 
     private fun loadUserInfo(userId: String) {
         val client = OkHttpClient()
-        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userInfo.php"
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/test/userInfo.php"
 
         val json = JSONObject().apply {
             put("userId", userId)
@@ -103,16 +127,17 @@ class UserEditActivity : AppCompatActivity() {
                         if (result == "success") {
                             val userName = jsonResponse.optString("userName", "")
                             val profile = jsonResponse.optString("profile", "")
-                            val imageUrl = jsonResponse.optString("imageUrl", "")
+                            val imageUrl = jsonResponse.optString("iconPath", "")
 
                             userNameEdit.setText(userName)
                             profileEdit.setText(profile)
 
-                            if (imageUrl.isNotEmpty()) {
-                                Glide.with(this@UserEditActivity)
-                                    .load(imageUrl)
-                                    .into(userImage)
-                            }
+                            val fullImageUrl = if (imageUrl.startsWith("http")) imageUrl else "https://click.ecc.ac.jp/ecc/whisper25_e/test/$imageUrl"
+
+                            Glide.with(this@UserEditActivity)
+                                .load(fullImageUrl)
+                                .error(R.drawable.chitoge)
+                                .into(userImage)
                         } else {
                             val errMsg = jsonResponse.optString("errMsg", "ユーザー情報の取得に失敗しました。")
                             Toast.makeText(this@UserEditActivity, errMsg, Toast.LENGTH_SHORT).show()
@@ -129,14 +154,27 @@ class UserEditActivity : AppCompatActivity() {
 
     private fun updateUserInfo(userId: String, userName: String, profile: String) {
         val client = OkHttpClient()
-        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/PHP_Whisper_3E/userUpd.php"
+        val url = "https://click.ecc.ac.jp/ecc/whisper25_e/test/userUpd.php"
 
-        val json = JSONObject().apply {
-            put("userId", userId)
-            put("userName", userName)
-            put("profile", profile)
+        val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
+        builder.addFormDataPart("userId", userId)
+        builder.addFormDataPart("userName", userName)
+        builder.addFormDataPart("profile", profile)
+
+
+        selectedImageUri?.let { uri ->
+            val inputStream = contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+
+            if (bytes != null) {
+                val fileName = "upload_${System.currentTimeMillis()}.jpg"
+                val requestFile = bytes.toRequestBody("image/*".toMediaTypeOrNull())
+                builder.addFormDataPart("icon", fileName, requestFile)
+            }
         }
-        val requestBody = json.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+
+        val requestBody = builder.build()
 
         val request = Request.Builder()
             .url(url)
